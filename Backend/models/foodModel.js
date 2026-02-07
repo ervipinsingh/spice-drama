@@ -24,6 +24,17 @@ const foodSchema = new mongoose.Schema(
       required: true,
     },
 
+    quantity: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    isOutOfStock: {
+      type: Boolean,
+      default: false,
+    },
+
     // Cloudinary image URL
     image: {
       type: String,
