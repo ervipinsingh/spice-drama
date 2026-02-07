@@ -29,21 +29,10 @@ const StoreContextProvider = (props) => {
     if (!val) return "";
 
     if (/^https?:\/\//i.test(val)) {
-      if (
-        typeof window !== "undefined" &&
-        window.location?.protocol === "https:"
-      ) {
-        return val.replace(/^http:\/\//i, "https://");
-      }
-      return val;
+      return val.replace(/^http:\/\//i, "https://");
     }
 
-    if (val.startsWith("/images/") || val.startsWith("/uploads/"))
-      return `${url}${val}`;
-    if (val.startsWith("images/") || val.startsWith("uploads/"))
-      return `${url}/${val}`;
-
-    return `${url}/images/${val}`;
+    return `${url}/${val}`;
   };
 
   /* ---------------- CART ACTIONS ---------------- */
@@ -57,7 +46,11 @@ const StoreContextProvider = (props) => {
       await axios.post(
         url + "/api/cart/add",
         { itemId: itemID },
-        { headers: { token } },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ FIX
+          },
+        },
       );
     }
   };
@@ -79,7 +72,11 @@ const StoreContextProvider = (props) => {
       await axios.post(
         url + "/api/cart/remove",
         { itemId: itemID },
-        { headers: { token } },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ FIX
+          },
+        },
       );
     }
   };
@@ -92,10 +89,7 @@ const StoreContextProvider = (props) => {
       const quantity = cartItems[itemId];
       if (quantity > 0) {
         const itemInfo = food_list.find((product) => product?._id === itemId);
-
-        // CRITICAL SAFETY CHECK
         if (!itemInfo) continue;
-
         totalAmount += itemInfo.price * quantity;
       }
     }
@@ -116,11 +110,11 @@ const StoreContextProvider = (props) => {
 
   const loadCartData = async (token) => {
     try {
-      const response = await axios.post(
-        url + "/api/cart/get",
-        {},
-        { headers: { token } },
-      );
+      const response = await axios.get(url + "/api/cart/get", {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ FIX
+        },
+      });
       setCartItems(response.data?.cartData || {});
     } catch (err) {
       console.error("Cart load failed:", err);
