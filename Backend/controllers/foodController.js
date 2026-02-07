@@ -9,16 +9,20 @@ const addFood = async (req, res) => {
       return res.json({ success: false, message: "Image is required" });
     }
 
-    const { name, description, price, category, quantity } = req.body;
+    // 🔥 SAFE PARSING (IMPORTANT)
+    const name = req.body.name;
+    const description = req.body.description;
+    const price = Number(req.body.price);
+    const category = req.body.category;
+    const quantity = Number(req.body.quantity);
 
-    if (quantity === undefined) {
+    if (Number.isNaN(quantity)) {
       return res.json({
         success: false,
-        message: "Quantity is required",
+        message: "Quantity missing or invalid",
       });
     }
 
-    // upload image buffer to cloudinary
     const result = await uploadToCloudinary(req.file.buffer);
 
     const food = new foodModel({
@@ -26,10 +30,8 @@ const addFood = async (req, res) => {
       description,
       price,
       category,
-      quantity: Number(quantity),
-      isOutOfStock: Number(quantity) === 0,
-
-      // Cloudinary data
+      quantity,
+      isOutOfStock: quantity === 0,
       image: result.secure_url,
       imageId: result.public_id,
     });
@@ -98,7 +100,6 @@ const updateFood = async (req, res) => {
       return res.json({ success: false, message: "Food not found" });
     }
 
-    // if new image uploaded
     if (req.file) {
       await cloudinary.uploader.destroy(food.imageId);
       const result = await uploadToCloudinary(req.file.buffer);
@@ -106,11 +107,10 @@ const updateFood = async (req, res) => {
       food.imageId = result.public_id;
     }
 
-    // update fields
     food.name = req.body.name;
     food.description = req.body.description;
     food.category = req.body.category;
-    food.price = req.body.price;
+    food.price = Number(req.body.price);
 
     if (req.body.quantity !== undefined) {
       food.quantity = Number(req.body.quantity);

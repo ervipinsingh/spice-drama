@@ -35,13 +35,11 @@ const foodSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Cloudinary image URL
     image: {
       type: String,
       required: true,
     },
 
-    // Cloudinary public_id (important for delete/update)
     imageId: {
       type: String,
       required: true,
