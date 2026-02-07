@@ -37,27 +37,30 @@ export default function PlaceOrder() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
-    console.log("USER TOKEN:", token);
+    console.log("USER TOKEN:", token); // ✅ keep this
 
     let orderItems = [];
-    food_list.map((item) => {
+    food_list.forEach((item) => {
       if (cartItems[item._id] > 0) {
-        let itemInfo = item;
-        itemInfo["quantity"] = cartItems[item._id];
-        orderItems.push(itemInfo);
+        orderItems.push({
+          ...item,
+          quantity: cartItems[item._id],
+        });
       }
     });
 
-    let orderData = {
+    const orderData = {
       address: deliveryInfo,
       items: orderItems,
       amount: getTotalCartAmount() + 40,
     };
-    let response = await axios.post(url + "/api/order/place", orderData, {
+
+    await axios.post(url + "/api/order/place", orderData, {
       headers: {
         Authorization: `Bearer ${token}`, // ✅ FIX
       },
     });
+
     navigate("/payment", {
       state: {
         orderData,
