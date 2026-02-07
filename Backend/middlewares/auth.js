@@ -1,34 +1,40 @@
 import jwt from "jsonwebtoken";
+import User from "../models/userModel.js";
 
 const authMiddleware = async (req, res, next) => {
   try {
-    // Support both: token header & Authorization: Bearer token
-    const authHeader = req.headers.authorization || req.headers.token;
+    let token;
 
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: "Not Authorized. Login again.",
-      });
+    // ✅ Standard Authorization header
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
     }
-
-    // Extract token
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
 
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Token missing",
+        message: "Not authorized, token missing",
       });
     }
 
-    // Verify token
+    // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Attach userId safely
-    req.userId = decoded.id;
+    // ✅ Fetch fresh user from DB
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ✅ Attach full user (IMPORTANT)
+    req.user = user;
 
     next();
   } catch (error) {

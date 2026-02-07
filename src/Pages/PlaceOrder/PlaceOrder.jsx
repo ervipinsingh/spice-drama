@@ -52,7 +52,9 @@ export default function PlaceOrder() {
       amount: getTotalCartAmount() + 40,
     };
     let response = await axios.post(url + "/api/order/place", orderData, {
-      headers: { token },
+      headers: {
+        Authorization: `Bearer ${token}`, // ✅ FIX
+      },
     });
     navigate("/payment", {
       state: {
