@@ -37,6 +37,8 @@ export default function PlaceOrder() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
+    console.log("USER TOKEN:", token);
+
     let orderItems = [];
     food_list.map((item) => {
       if (cartItems[item._id] > 0) {
