@@ -9,12 +9,12 @@ import {
 
 const orderRouter = express.Router();
 
-// USER
+// ================= USER =================
 orderRouter.post("/place", authMiddleware, placeOrder);
 orderRouter.post("/userorders", authMiddleware, userOrders);
 
-// ADMIN
-orderRouter.get("/list", listOrders);
-orderRouter.post("/status", updateStatus);
+// ================= ADMIN =================
+orderRouter.get("/list", authMiddleware, listOrders);
+orderRouter.post("/status", authMiddleware, updateStatus);
 
 export default orderRouter;
