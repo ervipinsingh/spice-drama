@@ -17,6 +17,6 @@ cartRouter.post("/add", authMiddleware, addToCart);
 cartRouter.post("/remove", authMiddleware, removeFromCart);
 
 // GET USER CART
-cartRouter.get("/get", authMiddleware, getCart);
+cartRouter.post("/get", authMiddleware, getCart);
 
 export default cartRouter;

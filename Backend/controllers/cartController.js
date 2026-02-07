@@ -4,7 +4,7 @@ import userModel from "../models/userModel.js";
 const addToCart = async (req, res) => {
   try {
     // authMiddleware se aa raha hai
-    const userId = req.userId;
+    const userId = req.user._id;
     const { itemId } = req.body;
 
     if (!itemId) {
@@ -47,7 +47,7 @@ const addToCart = async (req, res) => {
 /* ================= REMOVE FROM CART ================= */
 const removeFromCart = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user._id;
     const { itemId } = req.body;
 
     if (!itemId) {
@@ -90,7 +90,7 @@ const removeFromCart = async (req, res) => {
 /* ================= GET CART ================= */
 const getCart = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user._id;
 
     const user = await userModel.findById(userId);
 
