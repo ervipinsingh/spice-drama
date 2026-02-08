@@ -28,13 +28,36 @@ const StoreContextProvider = ({ children }) => {
     return `${url}/${image}`;
   };
 
+  /* ================= FETCH FOOD LIST ================= */
+  const fetchFoodList = async () => {
+    try {
+      const res = await axios.get(`${url}/api/food/list`);
+      setFoodList(res.data?.data || []);
+    } catch (err) {
+      console.error("Food list fetch failed:", err);
+      setFoodList([]);
+    }
+  };
+
   /* ================= CART ACTIONS ================= */
 
+  // ✅ STOCK-AWARE ADD TO CART (FINAL FIX)
   const AddToCart = async (itemId) => {
+    const food = food_list.find((f) => f._id === itemId);
+    if (!food) return;
+
+    const stock = food.quantity;
+    const currentQty = cartItems[itemId] || 0;
+
+    // 🔒 HARD STOP — STOCK LIMIT
+    if (currentQty >= stock) {
+      return;
+    }
+
     // optimistic UI
     setCartItems((prev) => ({
       ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
+      [itemId]: currentQty + 1,
     }));
 
     const savedToken = localStorage.getItem("token");
@@ -44,9 +67,7 @@ const StoreContextProvider = ({ children }) => {
       await axios.post(
         `${url}/api/cart/add`,
         { itemId },
-        {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        },
+        { headers: { Authorization: `Bearer ${savedToken}` } },
       );
     } catch (err) {
       console.error("AddToCart API failed:", err);
@@ -69,9 +90,7 @@ const StoreContextProvider = ({ children }) => {
       await axios.post(
         `${url}/api/cart/remove`,
         { itemId },
-        {
-          headers: { Authorization: `Bearer ${savedToken}` },
-        },
+        { headers: { Authorization: `Bearer ${savedToken}` } },
       );
     } catch (err) {
       console.error("RemoveCart API failed:", err);
@@ -89,20 +108,9 @@ const StoreContextProvider = ({ children }) => {
     return total;
   };
 
-  /* ================= API CALLS ================= */
-
-  const fetchFoodList = async () => {
-    try {
-      const res = await axios.get(`${url}/api/food/list`);
-      setFoodList(res.data?.data || []);
-    } catch (err) {
-      console.error("Food list fetch failed:", err);
-      setFoodList([]);
-    }
-  };
-
+  /* ================= LOAD CART FROM DB ================= */
   const loadCartData = async (savedToken) => {
-    if (!savedToken) return; // 🔥 CRITICAL GUARD
+    if (!savedToken) return;
 
     try {
       const res = await axios.get(`${url}/api/cart/get`, {
@@ -113,12 +121,17 @@ const StoreContextProvider = ({ children }) => {
         setCartItems(res.data.cartData || {});
       }
     } catch (err) {
-      // ❌ 401 is EXPECTED when token invalid — ignore silently
       if (err.response?.status !== 401) {
         console.error("Cart load failed:", err);
       }
       setCartItems({});
     }
+  };
+
+  /* ================= AFTER ORDER SUCCESS ================= */
+  const afterOrderSuccess = async () => {
+    setCartItems({});
+    await fetchFoodList(); // 🔥 quantity UI refresh
   };
 
   /* ================= INITIAL LOAD ================= */
@@ -142,10 +155,11 @@ const StoreContextProvider = ({ children }) => {
   const contextValue = {
     food_list,
     cartItems,
-    setCartItems,
     AddToCart,
     removeCart,
     getTotalCartAmount,
+    fetchFoodList,
+    afterOrderSuccess,
     url,
     getImageUrl,
     token,
