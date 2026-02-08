@@ -1,16 +1,46 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import foodModel from "../models/foodModel.js";
 
 /* ================= PLACE ORDER (COD) ================= */
 const placeOrder = async (req, res) => {
   try {
-    const userId = req.user._id; // ✅ FIX
+    const userId = req.user._id;
+    const { items, amount, address } = req.body;
 
+    /*
+      items format (assumed):
+      [
+        { foodId: "abc123", quantity: 2 },
+        { foodId: "xyz456", quantity: 1 }
+      ]
+    */
+
+    // 🔴 STEP 1: CHECK STOCK FIRST (NO CHANGE YET)
+    for (const item of items) {
+      const food = await foodModel.findById(item.foodId);
+
+      if (!food) {
+        return res.status(400).json({
+          success: false,
+          message: "Food item not found",
+        });
+      }
+
+      if (food.quantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `${food.name} is out of stock`,
+        });
+      }
+    }
+
+    // 🟢 STEP 2: CREATE ORDER (STOCK STILL SAME)
     const newOrder = new orderModel({
       userId,
-      items: req.body.items,
-      amount: req.body.amount,
-      address: req.body.address,
+      items,
+      amount,
+      address,
       paymentMethod: "COD",
       payment: false,
       status: "Food Processing",
@@ -18,6 +48,14 @@ const placeOrder = async (req, res) => {
 
     await newOrder.save();
 
+    // 🟢 STEP 3: NOW DECREASE QUANTITY (ORDER SUCCESS)
+    for (const item of items) {
+      await foodModel.findByIdAndUpdate(item.foodId, {
+        $inc: { quantity: -item.quantity },
+      });
+    }
+
+    // 🟢 STEP 4: CLEAR CART
     await userModel.findByIdAndUpdate(userId, {
       cartData: {},
     });
@@ -29,34 +67,11 @@ const placeOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("PLACE ORDER ERROR:", error);
-    res.status(500).json({ success: false, message: "Order placement failed" });
+    res.status(500).json({
+      success: false,
+      message: "Order placement failed",
+    });
   }
 };
 
-/* ================= USER ORDERS ================= */
-const userOrders = async (req, res) => {
-  try {
-    const orders = await orderModel
-      .find({ userId: req.user._id })
-      .sort({ createdAt: -1 });
-
-    res.json({ success: true, data: orders });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching orders" });
-  }
-};
-
-/* ================= ADMIN ================= */
-const listOrders = async (req, res) => {
-  const orders = await orderModel.find({}).sort({ createdAt: -1 });
-  res.json({ success: true, data: orders });
-};
-
-const updateStatus = async (req, res) => {
-  await orderModel.findByIdAndUpdate(req.body.orderId, {
-    status: req.body.status,
-  });
-  res.json({ success: true, message: "Status Updated" });
-};
-
-export { placeOrder, userOrders, listOrders, updateStatus };
+export { placeOrder };
