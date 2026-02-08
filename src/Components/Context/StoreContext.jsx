@@ -31,7 +31,7 @@ const StoreContextProvider = ({ children }) => {
   /* ================= CART ACTIONS ================= */
 
   const AddToCart = async (itemId) => {
-    // Optimistic UI update
+    // optimistic UI
     setCartItems((prev) => ({
       ...prev,
       [itemId]: (prev[itemId] || 0) + 1,
@@ -45,24 +45,20 @@ const StoreContextProvider = ({ children }) => {
         `${url}/api/cart/add`,
         { itemId },
         {
-          headers: {
-            Authorization: `Bearer ${savedToken}`,
-          },
+          headers: { Authorization: `Bearer ${savedToken}` },
         },
       );
-    } catch (error) {
-      console.error("Add to cart failed:", error);
+    } catch (err) {
+      console.error("AddToCart API failed:", err);
     }
   };
 
   const removeCart = async (itemId) => {
     setCartItems((prev) => {
       if (!prev[itemId]) return prev;
-
       const updated = { ...prev };
       if (updated[itemId] === 1) delete updated[itemId];
       else updated[itemId] -= 1;
-
       return updated;
     });
 
@@ -74,13 +70,11 @@ const StoreContextProvider = ({ children }) => {
         `${url}/api/cart/remove`,
         { itemId },
         {
-          headers: {
-            Authorization: `Bearer ${savedToken}`,
-          },
+          headers: { Authorization: `Bearer ${savedToken}` },
         },
       );
-    } catch (error) {
-      console.error("Remove cart failed:", error);
+    } catch (err) {
+      console.error("RemoveCart API failed:", err);
     }
   };
 
@@ -90,9 +84,7 @@ const StoreContextProvider = ({ children }) => {
     for (const itemId in cartItems) {
       const qty = cartItems[itemId];
       const item = food_list.find((p) => p?._id === itemId);
-      if (item && qty > 0) {
-        total += item.price * qty;
-      }
+      if (item && qty > 0) total += item.price * qty;
     }
     return total;
   };
@@ -103,27 +95,28 @@ const StoreContextProvider = ({ children }) => {
     try {
       const res = await axios.get(`${url}/api/food/list`);
       setFoodList(res.data?.data || []);
-    } catch (error) {
-      console.error("Food list fetch failed:", error);
+    } catch (err) {
+      console.error("Food list fetch failed:", err);
       setFoodList([]);
     }
   };
 
   const loadCartData = async (savedToken) => {
-    if (!savedToken) return;
+    if (!savedToken) return; // 🔥 CRITICAL GUARD
 
     try {
       const res = await axios.get(`${url}/api/cart/get`, {
-        headers: {
-          Authorization: `Bearer ${savedToken}`,
-        },
+        headers: { Authorization: `Bearer ${savedToken}` },
       });
 
       if (res.data?.success) {
         setCartItems(res.data.cartData || {});
       }
-    } catch (error) {
-      console.error("Cart load failed:", error);
+    } catch (err) {
+      // ❌ 401 is EXPECTED when token invalid — ignore silently
+      if (err.response?.status !== 401) {
+        console.error("Cart load failed:", err);
+      }
       setCartItems({});
     }
   };
