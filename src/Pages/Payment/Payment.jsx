@@ -7,74 +7,30 @@ export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-  const {
-    cartItems,
-    food_list,
-    getTotalCartAmount,
-    afterOrderSuccess,
-    url,
-    token,
-  } = useContext(StoreContext);
+  const { getTotalCartAmount } = useContext(StoreContext);
 
   const navigate = useNavigate();
 
-  /* ================= PLACE ORDER (COD) ================= */
-  const handleCODConfirm = async () => {
-    if (getTotalCartAmount() <= 0) return;
-
+  const handleCODConfirm = () => {
     setProcessing(true);
 
-    try {
-      // 🔥 Cart → backend format
-      const items = Object.keys(cartItems).map((id) => ({
-        foodId: id,
-        quantity: cartItems[id],
-      }));
-
-      const orderData = {
-        items,
-        amount: getTotalCartAmount(),
-        address: "COD Address", // abhi static
-      };
-
-      const res = await fetch(`${url}/api/order/place`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(orderData),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Order failed");
-      }
-
-      // 🔥 MOST IMPORTANT: UI + STOCK SYNC
-      await afterOrderSuccess();
-
-      setOrderComplete(true);
-    } catch (err) {
-      alert(err.message || "Order failed due to stock issue");
-    } finally {
+    setTimeout(() => {
       setProcessing(false);
-    }
+      setOrderComplete(true); // sirf state change
+    }, 1500);
   };
 
-  /* ================= AUTO REDIRECT ================= */
   useEffect(() => {
     if (orderComplete) {
       const timer = setTimeout(() => {
         navigate("/myorders");
-      }, 2500);
+      }, 2500); // 2.5 sec delay
 
       return () => clearTimeout(timer);
     }
   }, [orderComplete, navigate]);
 
-  /* ================= ORDER SUCCESS UI ================= */
+  /* ---------------- ORDER SUCCESS ---------------- */
   if (orderComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
@@ -99,7 +55,7 @@ export default function PaymentPage() {
     );
   }
 
-  /* ================= COD PAGE ================= */
+  /* ---------------- COD PAGE ---------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">

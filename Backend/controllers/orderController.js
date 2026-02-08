@@ -1,82 +1,62 @@
-import mongoose from "mongoose";
-import foodModel from "../models/foodModel.js";
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 
-export const placeOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
+/* ================= PLACE ORDER (COD) ================= */
+const placeOrder = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { items, amount, address } = req.body;
+    const userId = req.user._id; // ✅ FIX
 
-    /* ------------------------------------------------
-       FIX-2 STEP-A: FIRST ONLY VALIDATE STOCK
-       (NO DECREMENT HERE)
-    ------------------------------------------------ */
-    for (const item of items) {
-      const food = await foodModel.findById(item.foodId).session(session);
+    const newOrder = new orderModel({
+      userId,
+      items: req.body.items,
+      amount: req.body.amount,
+      address: req.body.address,
+      paymentMethod: "COD",
+      payment: false,
+      status: "Food Processing",
+    });
 
-      if (!food || food.quantity < item.quantity) {
-        throw new Error("Item just went out of stock");
-      }
-    }
+    await newOrder.save();
 
-    /* ------------------------------------------------
-       FIX-2 STEP-B: NOW SAFE TO DECREMENT
-    ------------------------------------------------ */
-    for (const item of items) {
-      await foodModel.findByIdAndUpdate(
-        item.foodId,
-        { $inc: { quantity: -item.quantity } },
-        { session },
-      );
-    }
-
-    /* ------------------------------------------------
-       FIX-2 STEP-C: CREATE ORDER
-    ------------------------------------------------ */
-    const order = new orderModel(
-      {
-        userId,
-        items,
-        amount,
-        address,
-        paymentMethod: "COD",
-        payment: false,
-        status: "Food Processing",
-      },
-      { session },
-    );
-
-    await order.save();
-
-    /* ------------------------------------------------
-       FIX-2 STEP-D: CLEAR USER CART
-    ------------------------------------------------ */
-    await userModel.findByIdAndUpdate(userId, { cartData: {} }, { session });
-
-    /* ------------------------------------------------
-       COMMIT EVERYTHING
-    ------------------------------------------------ */
-    await session.commitTransaction();
-    session.endSession();
+    await userModel.findByIdAndUpdate(userId, {
+      cartData: {},
+    });
 
     res.json({
       success: true,
       message: "Order placed successfully",
+      orderId: newOrder._id,
     });
-  } catch (err) {
-    /* ------------------------------------------------
-       ROLLBACK EVERYTHING
-    ------------------------------------------------ */
-    await session.abortTransaction();
-    session.endSession();
-
-    res.status(400).json({
-      success: false,
-      message: err.message || "Order failed due to stock issue",
-    });
+  } catch (error) {
+    console.error("PLACE ORDER ERROR:", error);
+    res.status(500).json({ success: false, message: "Order placement failed" });
   }
 };
+
+/* ================= USER ORDERS ================= */
+const userOrders = async (req, res) => {
+  try {
+    const orders = await orderModel
+      .find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching orders" });
+  }
+};
+
+/* ================= ADMIN ================= */
+const listOrders = async (req, res) => {
+  const orders = await orderModel.find({}).sort({ createdAt: -1 });
+  res.json({ success: true, data: orders });
+};
+
+const updateStatus = async (req, res) => {
+  await orderModel.findByIdAndUpdate(req.body.orderId, {
+    status: req.body.status,
+  });
+  res.json({ success: true, message: "Status Updated" });
+};
+
+export { placeOrder, userOrders, listOrders, updateStatus };
