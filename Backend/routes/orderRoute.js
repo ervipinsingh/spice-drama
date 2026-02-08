@@ -1,6 +1,6 @@
 import express from "express";
 import authMiddleware from "../middlewares/auth.js";
-import { hasRole } from "../middleware/auth.js";
+import { hasRole } from "../middlewares/auth.js";
 import {
   listOrders,
   placeOrder,
