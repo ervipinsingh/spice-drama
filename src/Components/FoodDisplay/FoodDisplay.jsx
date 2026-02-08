@@ -12,8 +12,8 @@ const FoodDisplay = ({ category = "Pizza" }) => {
     >
       {/* Heading */}
       <h1
-        className="text-2xl sm:text-3xl md:text-4xl font-semibold
-                 text-center mt-12 sm:mt-16 mb-8"
+        className="text-2xl sm:text-3xl md:text-4xl
+                 text-center sm:mt-16 mb-8"
       >
         Top dishes near you
       </h1>
