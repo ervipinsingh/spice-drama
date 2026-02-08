@@ -4,10 +4,7 @@ import "../../App.css";
 
 const Exploremenu = ({ Category, SetCategory }) => {
   return (
-    <div
-      className="mt-10 pt-10 px-5 md:mx-10"
-      id="explore-menu"
-    >
+    <div className="mt-10 pt-10 px-5 md:mx-10" id="explore-menu">
       <h1 className="flex justify-center text-2xl sm:text-3xl md:text-4xl">
         Explore Our&nbsp;<span className="text-orange-500">Menu</span>
       </h1>
