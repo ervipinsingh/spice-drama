@@ -8,12 +8,24 @@ const MyOrders = () => {
   const { url, token, getImageUrl } = useContext(StoreContext);
 
   const fetchOrders = async () => {
-    const response = await axios.post(
-      url + "/api/order/userorders",
-      {},
-      { headers: { token } },
-    );
-    setData(response.data.data);
+    try {
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) return;
+
+      const response = await axios.post(
+        url + "/api/order/userorders",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${savedToken}`,
+          },
+        },
+      );
+
+      setData(response.data.data || []);
+    } catch (error) {
+      console.error("Fetch orders failed:", error);
+    }
   };
 
   const calculateItemTotal = (items = []) => {
