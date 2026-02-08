@@ -14,7 +14,8 @@ orderRouter.post("/place", authMiddleware, placeOrder);
 orderRouter.post("/userorders", authMiddleware, userOrders);
 
 // ================= ADMIN =================
-orderRouter.get("/list", authMiddleware, listOrders);
+// orderRouter.get("/list", authMiddleware, listOrders);
+orderRouter.get("/list", hasRole("super_admin", "admin"), listOrders);
 orderRouter.post("/status", authMiddleware, updateStatus);
 
 export default orderRouter;
