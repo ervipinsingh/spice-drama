@@ -9,7 +9,7 @@ const Exploremenu = ({ Category, SetCategory }) => {
       id="explore-menu"
     >
       <h1 className="flex justify-center text-2xl sm:text-3xl md:text-4xl">
-        Explore Our <span className="text-orange-500">Menu</span>
+        Explore Our <span className="text-orange-500">Menu</span>{" "}
       </h1>
       <p className="flex justify-center pt-5 text-gray-500">
         Freshly cooked favorites, delivered hot to your door.
