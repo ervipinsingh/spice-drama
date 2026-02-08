@@ -49,31 +49,31 @@ const StoreContextProvider = ({ children }) => {
   /* ================= ADD TO CART (BACKEND AUTHORITY) ================= */
   const AddToCart = async (itemId) => {
     const food = food_list.find((f) => f._id === itemId);
-    if (!food) return false;
+    if (!food) return;
 
     const currentQty = cartItems[itemId] || 0;
-    if (currentQty >= food.quantity) return false;
+
+    // ❌ frontend guard (UX only)
+    if (currentQty >= food.quantity) return;
 
     const authToken = localStorage.getItem("token");
-    if (!authToken) {
-      return "NO_LOGIN";
-    }
+    if (!authToken) return;
 
     try {
+      // 🔥 backend decides final truth
       const res = await axios.post(
         `${url}/api/cart/add`,
         { itemId },
-        { headers: { Authorization: `Bearer ${authToken}` } },
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       if (res.data?.success) {
-        await loadCartData(authToken); // 🔥 sync cart
-        return true;
+        // 🔥 reload cart from server (NO CHEAT)
+        await loadCartData(authToken);
       }
-
-      return false;
     } catch (err) {
-      return false;
+      console.error("AddToCart failed:", err);
+      await loadCartData(authToken);
     }
   };
 
@@ -86,7 +86,7 @@ const StoreContextProvider = ({ children }) => {
       const res = await axios.post(
         `${url}/api/cart/remove`,
         { itemId },
-        { headers: { Authorization: `Bearer ${authToken}` } },
+        { headers: { Authorization: `Bearer ${authToken}` } }
       );
 
       if (res.data?.success) {
@@ -112,8 +112,8 @@ const StoreContextProvider = ({ children }) => {
   const afterOrderSuccess = async () => {
     const authToken = localStorage.getItem("token");
 
-    setCartItems({}); // instant UI clear
-    await fetchFoodList(); // 🔥 updated quantities
+    setCartItems({});          // instant UI clear
+    await fetchFoodList();     // 🔥 updated quantities
     await loadCartData(authToken); // server cart confirm (empty)
   };
 
