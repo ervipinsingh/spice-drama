@@ -17,68 +17,77 @@ const FoodItem = ({ id, name, description, price, image, quantity }) => {
     }
 
     const result = await AddToCart(id);
-
     if (result === "NO_LOGIN") {
       toast.error("Please login to add items");
-    } else if (result === false) {
-      toast.error("Unable to add item");
     }
   };
 
   return (
     <div className="bg-gradient-to-b from-orange-50 to-white w-full md:w-[330px] lg:w-[260px]">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition hover:scale-105">
+        {/* IMAGE WRAPPER */}
         <div className="relative">
+          {/* 👇 IMAGE SHOULD NOT BLOCK CLICKS */}
           <img
             src={image}
             alt={name}
-            className={`w-full h-40 object-cover ${
+            className={`w-full h-40 object-cover pointer-events-none ${
               isOutOfStock ? "opacity-50 grayscale" : ""
             }`}
           />
 
+          {/* OUT OF STOCK BADGE */}
           {isOutOfStock && (
-            <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded z-20">
               Out of Stock
-            </span>
+            </div>
           )}
 
+          {/* ADD / COUNTER (Z-INDEX FIXED) */}
           {cartQty === 0 ? (
             !isOutOfStock && (
-              <img
+              <button
                 onClick={handleAdd}
-                src={assets.add_icon}
-                className="absolute bottom-2 right-2 bg-white p-2 rounded-full cursor-pointer"
-              />
+                className="absolute bottom-2 right-2 z-30 bg-white p-2 rounded-full shadow-lg hover:scale-110 transition"
+              >
+                <img src={assets.add_icon} alt="add" />
+              </button>
             )
           ) : (
-            <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-white px-3 py-1 rounded-full">
-              <img
-                src={assets.remove_icon_red}
-                onClick={() => removeCart(id)}
-                className="h-5 cursor-pointer"
-              />
-              <span>{cartQty}</span>
-              <img
-                src={assets.add_icon_green}
+            <div className="absolute bottom-2 right-2 z-30 flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-lg">
+              <button onClick={() => removeCart(id)}>
+                <img
+                  src={assets.remove_icon_red}
+                  alt="remove"
+                  className="h-5"
+                />
+              </button>
+
+              <span className="font-semibold">{cartQty}</span>
+
+              <button
                 onClick={handleAdd}
-                className={`h-5 ${
+                disabled={isOutOfStock}
+                className={`${
                   isOutOfStock
                     ? "opacity-40 cursor-not-allowed"
-                    : "cursor-pointer"
+                    : "hover:scale-110"
                 }`}
-              />
+              >
+                <img src={assets.add_icon_green} alt="add" className="h-5" />
+              </button>
             </div>
           )}
         </div>
 
-        <div className="p-4">
-          <h3 className="font-semibold text-lg">{name}</h3>
-          <p className="text-sm text-gray-500">{description}</p>
-          <p className="font-bold mt-1">₹{price}</p>
+        {/* TEXT */}
+        <div className="p-4 space-y-2">
+          <p className="text-lg font-semibold">{name}</p>
+          <p className="text-gray-600 text-sm">{description}</p>
+          <p className="text-black text-lg font-bold">₹{price}</p>
 
           {remainingStock > 0 && remainingStock <= 5 && (
-            <p className="text-xs text-red-500 mt-1">
+            <p className="text-xs text-red-500 font-medium">
               Only {remainingStock} left
             </p>
           )}
