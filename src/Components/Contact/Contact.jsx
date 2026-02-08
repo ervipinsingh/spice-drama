@@ -23,7 +23,7 @@ function Contact() {
             Let's Connect
           </span>
 
-          <h1 className="text-2xl md:text-4xl text-gray-900 mt-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl text-gray-900 mt-4">
             Get in <span className="text-orange-500">Touch</span>
           </h1>
 

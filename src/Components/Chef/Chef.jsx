@@ -42,7 +42,7 @@ export default function ChefSection() {
           {/* Right Side - Content */}
           <div className="space-y-6">
             <div className="inline-block animate-fade-in">
-              <span className="text-orange-500 font-semibold text-sm tracking-widest uppercase bg-orange-100 px-4 py-2 rounded-full">
+              <span className="text-orange-500 font-semibold text-xs md:text-sm tracking-widest uppercase bg-orange-100 px-4 py-2 rounded-full">
                 Meet Our Chefs
               </span>
             </div>
