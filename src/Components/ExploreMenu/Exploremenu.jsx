@@ -5,7 +5,7 @@ import "../../App.css";
 const Exploremenu = ({ Category, SetCategory }) => {
   return (
     <div
-      className="bg-gradient-to-b from-orange-50 to-white mt-10 pt-10 px-5 md:mx-20"
+      className="bg-gradient-to-b from-orange-50 to-white mt-10 pt-10 px-5 md:mx-10"
       id="explore-menu"
     >
       <h1 className="flex justify-center text-3xl">Explore our menu</h1>
