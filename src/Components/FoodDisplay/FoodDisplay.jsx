@@ -15,7 +15,7 @@ const FoodDisplay = ({ category = "Pizza" }) => {
         className="text-2xl sm:text-3xl md:text-4xl
                  text-center sm:mt-16 mb-8"
       >
-        Top dishes near you
+        Top <span className="text-orange-500">Dishes</span>{" "} Near You
       </h1>
 
       {/* Food Grid */}
