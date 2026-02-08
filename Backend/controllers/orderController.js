@@ -11,25 +11,32 @@ export const placeOrder = async (req, res) => {
     const userId = req.user._id;
     const { items, amount, address } = req.body;
 
-    // 🔒 STEP 1: ATOMIC CHECK + DECREMENT
+    /* ------------------------------------------------
+       FIX-2 STEP-A: FIRST ONLY VALIDATE STOCK
+       (NO DECREMENT HERE)
+    ------------------------------------------------ */
     for (const item of items) {
-      const updatedFood = await foodModel.findOneAndUpdate(
-        {
-          _id: item.foodId,
-          quantity: { $gte: item.quantity },
-        },
-        {
-          $inc: { quantity: -item.quantity },
-        },
-        { new: true, session },
-      );
+      const food = await foodModel.findById(item.foodId).session(session);
 
-      if (!updatedFood) {
+      if (!food || food.quantity < item.quantity) {
         throw new Error("Item just went out of stock");
       }
     }
 
-    // 🔒 STEP 2: CREATE ORDER
+    /* ------------------------------------------------
+       FIX-2 STEP-B: NOW SAFE TO DECREMENT
+    ------------------------------------------------ */
+    for (const item of items) {
+      await foodModel.findByIdAndUpdate(
+        item.foodId,
+        { $inc: { quantity: -item.quantity } },
+        { session },
+      );
+    }
+
+    /* ------------------------------------------------
+       FIX-2 STEP-C: CREATE ORDER
+    ------------------------------------------------ */
     const order = new orderModel(
       {
         userId,
@@ -45,20 +52,31 @@ export const placeOrder = async (req, res) => {
 
     await order.save();
 
-    // 🔒 STEP 3: CLEAR CART
+    /* ------------------------------------------------
+       FIX-2 STEP-D: CLEAR USER CART
+    ------------------------------------------------ */
     await userModel.findByIdAndUpdate(userId, { cartData: {} }, { session });
 
+    /* ------------------------------------------------
+       COMMIT EVERYTHING
+    ------------------------------------------------ */
     await session.commitTransaction();
     session.endSession();
 
-    res.json({ success: true, message: "Order placed successfully" });
+    res.json({
+      success: true,
+      message: "Order placed successfully",
+    });
   } catch (err) {
+    /* ------------------------------------------------
+       ROLLBACK EVERYTHING
+    ------------------------------------------------ */
     await session.abortTransaction();
     session.endSession();
 
     res.status(400).json({
       success: false,
-      message: err.message || "Order failed",
+      message: err.message || "Order failed due to stock issue",
     });
   }
 };
