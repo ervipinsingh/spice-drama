@@ -1,75 +1,81 @@
+import mongoose from "mongoose";
 import orderModel from "../models/orderModel.js";
-import userModel from "../models/userModel.js";
 import foodModel from "../models/foodModel.js";
+import userModel from "../models/userModel.js";
 
 /* ================= PLACE ORDER (COD) ================= */
 const placeOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.user._id;
     const { items, amount, address } = req.body;
 
     /*
-      items format (assumed):
+      items format:
       [
         { foodId: "abc123", quantity: 2 },
         { foodId: "xyz456", quantity: 1 }
       ]
     */
 
-    // 🔴 STEP 1: CHECK STOCK FIRST (NO CHANGE YET)
+    // 🔒 STEP-2A: ATOMIC STOCK CHECK + DECREMENT
     for (const item of items) {
-      const food = await foodModel.findById(item.foodId);
+      const updatedFood = await foodModel.findOneAndUpdate(
+        {
+          _id: item.foodId,
+          quantity: { $gte: item.quantity }, // 🔥 GUARANTEE
+        },
+        {
+          $inc: { quantity: -item.quantity },
+        },
+        {
+          new: true,
+          session,
+        },
+      );
 
-      if (!food) {
-        return res.status(400).json({
-          success: false,
-          message: "Food item not found",
-        });
-      }
-
-      if (food.quantity < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `${food.name} is out of stock`,
-        });
+      if (!updatedFood) {
+        throw new Error("Insufficient stock for some items");
       }
     }
 
-    // 🟢 STEP 2: CREATE ORDER (STOCK STILL SAME)
-    const newOrder = new orderModel({
-      userId,
-      items,
-      amount,
-      address,
-      paymentMethod: "COD",
-      payment: false,
-      status: "Food Processing",
-    });
+    // 🔒 STEP-2B: CREATE ORDER
+    const newOrder = new orderModel(
+      {
+        userId,
+        items,
+        amount,
+        address,
+        paymentMethod: "COD",
+        payment: false,
+        status: "Food Processing",
+      },
+      { session },
+    );
 
     await newOrder.save();
 
-    // 🟢 STEP 3: NOW DECREASE QUANTITY (ORDER SUCCESS)
-    for (const item of items) {
-      await foodModel.findByIdAndUpdate(item.foodId, {
-        $inc: { quantity: -item.quantity },
-      });
-    }
+    // 🔒 STEP-2C: CLEAR USER CART
+    await userModel.findByIdAndUpdate(userId, { cartData: {} }, { session });
 
-    // 🟢 STEP 4: CLEAR CART
-    await userModel.findByIdAndUpdate(userId, {
-      cartData: {},
-    });
+    // 🔒 COMMIT TRANSACTION
+    await session.commitTransaction();
+    session.endSession();
 
     res.json({
       success: true,
       message: "Order placed successfully",
-      orderId: newOrder._id,
     });
   } catch (error) {
-    console.error("PLACE ORDER ERROR:", error);
-    res.status(500).json({
+    // ❌ ROLLBACK (STOCK AUTO RESTORE)
+    await session.abortTransaction();
+    session.endSession();
+
+    res.status(400).json({
       success: false,
-      message: "Order placement failed",
+      message: error.message || "Order failed due to stock issue",
     });
   }
 };

@@ -17,6 +17,7 @@ const foodSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
 
     category: {
@@ -24,15 +25,12 @@ const foodSchema = new mongoose.Schema(
       required: true,
     },
 
+    // 🔥 SINGLE SOURCE OF TRUTH FOR INVENTORY
     quantity: {
       type: Number,
       required: true,
+      min: 0,
       default: 0,
-    },
-
-    isOutOfStock: {
-      type: Boolean,
-      default: false,
     },
 
     image: {
