@@ -1,5 +1,5 @@
 import express from "express";
-import authMiddleware, { hasRole } from "../middlewares/auth.js";
+import authMiddleware from "../middlewares/auth.js";
 import {
   listOrders,
   placeOrder,
@@ -14,17 +14,7 @@ orderRouter.post("/place", authMiddleware, placeOrder);
 orderRouter.post("/userorders", authMiddleware, userOrders);
 
 // ADMIN
-orderRouter.get(
-  "/list",
-  authMiddleware,
-  hasRole("super_admin", "admin"),
-  listOrders,
-);
-orderRouter.post(
-  "/status",
-  authMiddleware,
-  hasRole("super_admin", "admin"),
-  updateStatus,
-);
+orderRouter.get("/list", listOrders);
+orderRouter.post("/status", updateStatus);
 
 export default orderRouter;
