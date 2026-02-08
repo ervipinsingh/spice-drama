@@ -49,18 +49,17 @@ const StoreContextProvider = ({ children }) => {
   /* ================= ADD TO CART (BACKEND AUTHORITY) ================= */
   const AddToCart = async (itemId) => {
     const food = food_list.find((f) => f._id === itemId);
-    if (!food) return;
+    if (!food) return false;
 
     const currentQty = cartItems[itemId] || 0;
-
-    // ❌ frontend guard (UX only)
-    if (currentQty >= food.quantity) return;
+    if (currentQty >= food.quantity) return false;
 
     const authToken = localStorage.getItem("token");
-    if (!authToken) return;
+    if (!authToken) {
+      return "NO_LOGIN";
+    }
 
     try {
-      // 🔥 backend decides final truth
       const res = await axios.post(
         `${url}/api/cart/add`,
         { itemId },
@@ -68,12 +67,13 @@ const StoreContextProvider = ({ children }) => {
       );
 
       if (res.data?.success) {
-        // 🔥 reload cart from server (NO CHEAT)
-        await loadCartData(authToken);
+        await loadCartData(authToken); // 🔥 sync cart
+        return true;
       }
+
+      return false;
     } catch (err) {
-      console.error("AddToCart failed:", err);
-      await loadCartData(authToken);
+      return false;
     }
   };
 

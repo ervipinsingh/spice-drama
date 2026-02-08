@@ -7,24 +7,27 @@ const FoodItem = ({ id, name, description, price, image, quantity }) => {
   const { cartItems, AddToCart, removeCart } = useContext(StoreContext);
 
   const cartQty = cartItems[id] || 0;
-
-  // 🔥 REAL REMAINING STOCK (LIVE)
   const remainingStock = quantity - cartQty;
-
   const isOutOfStock = remainingStock <= 0;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (isOutOfStock) {
       toast.error("Item is out of stock");
       return;
     }
-    AddToCart(id);
+
+    const result = await AddToCart(id);
+
+    if (result === "NO_LOGIN") {
+      toast.error("Please login to add items");
+    } else if (result === false) {
+      toast.error("Unable to add item");
+    }
   };
 
   return (
     <div className="bg-gradient-to-b from-orange-50 to-white w-full md:w-[330px] lg:w-[260px]">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition duration-300 hover:scale-105">
-        {/* IMAGE + CART */}
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition">
         <div className="relative">
           <img
             src={image}
@@ -34,62 +37,48 @@ const FoodItem = ({ id, name, description, price, image, quantity }) => {
             }`}
           />
 
-          {/* OUT OF STOCK BADGE */}
           {isOutOfStock && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+            <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
               Out of Stock
-            </div>
+            </span>
           )}
 
-          {/* ADD / COUNTER */}
           {cartQty === 0 ? (
             !isOutOfStock && (
               <img
                 onClick={handleAdd}
                 src={assets.add_icon}
-                alt="add"
-                className="absolute bottom-2 right-2 bg-white p-2 rounded-full cursor-pointer hover:scale-110 transition"
+                className="absolute bottom-2 right-2 bg-white p-2 rounded-full cursor-pointer"
               />
             )
           ) : (
-            <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-lg">
+            <div className="absolute bottom-2 right-2 flex items-center gap-2 bg-white px-3 py-1 rounded-full">
               <img
-                onClick={() => removeCart(id)}
                 src={assets.remove_icon_red}
-                alt="remove"
-                className="h-5 cursor-pointer hover:scale-110 transition"
+                onClick={() => removeCart(id)}
+                className="h-5 cursor-pointer"
               />
-
-              <p className="font-semibold text-black">{cartQty}</p>
-
+              <span>{cartQty}</span>
               <img
-                onClick={handleAdd}
                 src={assets.add_icon_green}
-                alt="add"
-                className={`h-5 transition ${
+                onClick={handleAdd}
+                className={`h-5 ${
                   isOutOfStock
                     ? "opacity-40 cursor-not-allowed"
-                    : "cursor-pointer hover:scale-110"
+                    : "cursor-pointer"
                 }`}
               />
             </div>
           )}
         </div>
 
-        {/* TEXT */}
-        <div className="p-4 space-y-2">
-          <div className="flex justify-between">
-            <p className="text-lg font-semibold">{name}</p>
-            <img src={assets.rating_starts} alt="rating" className="h-4" />
-          </div>
+        <div className="p-4">
+          <h3 className="font-semibold text-lg">{name}</h3>
+          <p className="text-sm text-gray-500">{description}</p>
+          <p className="font-bold mt-1">₹{price}</p>
 
-          <p className="text-gray-600 text-sm">{description}</p>
-
-          <p className="text-black text-lg font-bold">₹{price}</p>
-
-          {/* 🔥 LIVE STOCK INFO */}
           {remainingStock > 0 && remainingStock <= 5 && (
-            <p className="text-xs text-red-500 font-medium">
+            <p className="text-xs text-red-500 mt-1">
               Only {remainingStock} left
             </p>
           )}
