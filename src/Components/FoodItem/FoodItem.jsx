@@ -6,89 +6,101 @@ import { toast } from "react-toastify";
 const FoodItem = ({ id, name, description, price, image, quantity }) => {
   const { cartItems, AddToCart, removeCart } = useContext(StoreContext);
 
+  const isOutOfStock = quantity === 0;
   const cartQty = cartItems[id] || 0;
-  const remainingStock = quantity - cartQty;
-  const isOutOfStock = remainingStock <= 0;
 
-  const handleAdd = async () => {
+  // ✅ SAFE ADD HANDLER
+  const handleAdd = () => {
     if (isOutOfStock) {
       toast.error("Item is out of stock");
       return;
     }
 
-    const result = await AddToCart(id);
-    if (result === "NO_LOGIN") {
-      toast.error("Please login to add items");
+    if (cartQty >= quantity) {
+      toast.error("Stock limit reached");
+      return;
     }
+
+    AddToCart(id);
   };
 
   return (
     <div className="bg-gradient-to-b from-orange-50 to-white w-full md:w-[330px] lg:w-[260px]">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition hover:scale-105">
-        {/* IMAGE WRAPPER */}
+      <div
+        className="bg-white rounded-2xl shadow-lg overflow-hidden
+                   transform transition duration-300 hover:scale-105"
+      >
+        {/* Image + Cart */}
         <div className="relative">
-          {/* 👇 IMAGE SHOULD NOT BLOCK CLICKS */}
           <img
             src={image}
             alt={name}
-            className={`w-full h-40 object-cover pointer-events-none ${
+            className={`w-full h-40 object-cover ${
               isOutOfStock ? "opacity-50 grayscale" : ""
             }`}
           />
 
           {/* OUT OF STOCK BADGE */}
           {isOutOfStock && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded z-20">
+            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
               Out of Stock
             </div>
           )}
 
-          {/* ADD / COUNTER (Z-INDEX FIXED) */}
+          {/* Add / Counter */}
           {cartQty === 0 ? (
             !isOutOfStock && (
-              <button
+              <img
                 onClick={handleAdd}
-                className="absolute bottom-2 right-2 z-30 bg-white p-2 rounded-full shadow-lg hover:scale-110 transition"
-              >
-                <img src={assets.add_icon} alt="add" />
-              </button>
+                src={assets.add_icon}
+                alt=""
+                className="absolute bottom-2 right-2 bg-white border-0 p-2 rounded-full 
+                           cursor-pointer hover:scale-110 transition"
+              />
             )
           ) : (
-            <div className="absolute bottom-2 right-2 z-30 flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-lg">
-              <button onClick={() => removeCart(id)}>
-                <img
-                  src={assets.remove_icon_red}
-                  alt="remove"
-                  className="h-5"
-                />
-              </button>
+            <div
+              className="absolute bottom-2 right-2 flex items-center gap-2
+                         bg-white px-3 py-1 rounded-full shadow-lg"
+            >
+              <img
+                onClick={() => removeCart(id)}
+                src={assets.remove_icon_red}
+                alt=""
+                className="h-5 cursor-pointer hover:scale-110 transition"
+              />
 
-              <span className="font-semibold">{cartQty}</span>
+              <p className="font-semibold text-black">{cartQty}</p>
 
-              <button
+              <img
                 onClick={handleAdd}
-                disabled={isOutOfStock}
-                className={`${
-                  isOutOfStock
+                src={assets.add_icon_green}
+                alt=""
+                className={`h-5 transition ${
+                  cartQty >= quantity
                     ? "opacity-40 cursor-not-allowed"
-                    : "hover:scale-110"
+                    : "cursor-pointer hover:scale-110"
                 }`}
-              >
-                <img src={assets.add_icon_green} alt="add" className="h-5" />
-              </button>
+              />
             </div>
           )}
         </div>
 
-        {/* TEXT */}
+        {/* Text */}
         <div className="p-4 space-y-2">
-          <p className="text-lg font-semibold">{name}</p>
+          <div className="flex justify-between">
+            <p className="text-lg font-semibold">{name}</p>
+            <img src={assets.rating_starts} alt="" className="h-4" />
+          </div>
+
           <p className="text-gray-600 text-sm">{description}</p>
+
           <p className="text-black text-lg font-bold">₹{price}</p>
 
-          {remainingStock > 0 && remainingStock <= 5 && (
+          {/* LOW STOCK WARNING */}
+          {quantity > 0 && quantity <= 5 && (
             <p className="text-xs text-red-500 font-medium">
-              Only {remainingStock} left
+              Only {quantity} left
             </p>
           )}
         </div>
