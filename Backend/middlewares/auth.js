@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
+/* ================= AUTH ================= */
 const authMiddleware = async (req, res, next) => {
   try {
     let token;
 
-    // ✅ Standard Authorization header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
@@ -20,10 +20,8 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ Fetch fresh user from DB
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -33,13 +31,9 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ Attach full user (IMPORTANT)
     req.user = user;
-
     next();
   } catch (error) {
-    console.error("AUTH ERROR:", error.message);
-
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token",
@@ -47,4 +41,18 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+/* ================= ROLE CHECK ================= */
+const hasRole = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied",
+      });
+    }
+    next();
+  };
+};
+
+export { hasRole };
 export default authMiddleware;
