@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
-import orderModel from "../models/orderModel.js";
 import foodModel from "../models/foodModel.js";
+import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 
-/* ================= PLACE ORDER (COD) ================= */
-const placeOrder = async (req, res) => {
+export const placeOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -12,37 +11,26 @@ const placeOrder = async (req, res) => {
     const userId = req.user._id;
     const { items, amount, address } = req.body;
 
-    /*
-      items format:
-      [
-        { foodId: "abc123", quantity: 2 },
-        { foodId: "xyz456", quantity: 1 }
-      ]
-    */
-
-    // 🔒 STEP-2A: ATOMIC STOCK CHECK + DECREMENT
+    // 🔒 STEP 1: ATOMIC CHECK + DECREMENT
     for (const item of items) {
       const updatedFood = await foodModel.findOneAndUpdate(
         {
           _id: item.foodId,
-          quantity: { $gte: item.quantity }, // 🔥 GUARANTEE
+          quantity: { $gte: item.quantity },
         },
         {
           $inc: { quantity: -item.quantity },
         },
-        {
-          new: true,
-          session,
-        },
+        { new: true, session },
       );
 
       if (!updatedFood) {
-        throw new Error("Insufficient stock for some items");
+        throw new Error("Item just went out of stock");
       }
     }
 
-    // 🔒 STEP-2B: CREATE ORDER
-    const newOrder = new orderModel(
+    // 🔒 STEP 2: CREATE ORDER
+    const order = new orderModel(
       {
         userId,
         items,
@@ -55,29 +43,22 @@ const placeOrder = async (req, res) => {
       { session },
     );
 
-    await newOrder.save();
+    await order.save();
 
-    // 🔒 STEP-2C: CLEAR USER CART
+    // 🔒 STEP 3: CLEAR CART
     await userModel.findByIdAndUpdate(userId, { cartData: {} }, { session });
 
-    // 🔒 COMMIT TRANSACTION
     await session.commitTransaction();
     session.endSession();
 
-    res.json({
-      success: true,
-      message: "Order placed successfully",
-    });
-  } catch (error) {
-    // ❌ ROLLBACK (STOCK AUTO RESTORE)
+    res.json({ success: true, message: "Order placed successfully" });
+  } catch (err) {
     await session.abortTransaction();
     session.endSession();
 
     res.status(400).json({
       success: false,
-      message: error.message || "Order failed due to stock issue",
+      message: err.message || "Order failed",
     });
   }
 };
-
-export { placeOrder };

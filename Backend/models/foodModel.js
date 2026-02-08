@@ -2,30 +2,12 @@ import mongoose from "mongoose";
 
 const foodSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    price: { type: Number, required: true, min: 0 },
+    category: { type: String, required: true },
 
-    description: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    price: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-
-    category: {
-      type: String,
-      required: true,
-    },
-
-    // 🔥 SINGLE SOURCE OF TRUTH FOR INVENTORY
+    // 🔥 INVENTORY (ONLY THIS MATTERS)
     quantity: {
       type: Number,
       required: true,
@@ -33,21 +15,10 @@ const foodSchema = new mongoose.Schema(
       default: 0,
     },
 
-    image: {
-      type: String,
-      required: true,
-    },
-
-    imageId: {
-      type: String,
-      required: true,
-    },
+    image: { type: String, required: true },
+    imageId: { type: String, required: true },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
-const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
-
-export default foodModel;
+export default mongoose.model("food", foodSchema);
