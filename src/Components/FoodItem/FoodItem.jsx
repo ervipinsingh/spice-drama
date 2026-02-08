@@ -1,11 +1,28 @@
 import React, { useContext } from "react";
 import { assets } from "../../assets/assets";
 import { StoreContext } from "../Context/StoreContext";
+import { toast } from "react-toastify";
 
 const FoodItem = ({ id, name, description, price, image, quantity }) => {
   const { cartItems, AddToCart, removeCart } = useContext(StoreContext);
 
   const isOutOfStock = quantity === 0;
+  const cartQty = cartItems[id] || 0;
+
+  // ✅ SAFE ADD HANDLER
+  const handleAdd = () => {
+    if (isOutOfStock) {
+      toast.error("Item is out of stock");
+      return;
+    }
+
+    if (cartQty >= quantity) {
+      toast.error("Stock limit reached");
+      return;
+    }
+
+    AddToCart(id);
+  };
 
   return (
     <div className="bg-gradient-to-b from-orange-50 to-white w-full md:w-[330px] lg:w-[260px]">
@@ -31,10 +48,10 @@ const FoodItem = ({ id, name, description, price, image, quantity }) => {
           )}
 
           {/* Add / Counter */}
-          {!cartItems[id] ? (
+          {cartQty === 0 ? (
             !isOutOfStock && (
               <img
-                onClick={() => AddToCart(id)}
+                onClick={handleAdd}
                 src={assets.add_icon}
                 alt=""
                 className="absolute bottom-2 right-2 bg-white border-0 p-2 rounded-full 
@@ -53,14 +70,14 @@ const FoodItem = ({ id, name, description, price, image, quantity }) => {
                 className="h-5 cursor-pointer hover:scale-110 transition"
               />
 
-              <p className="font-semibold text-black">{cartItems[id]}</p>
+              <p className="font-semibold text-black">{cartQty}</p>
 
               <img
-                onClick={() => !isOutOfStock && AddToCart(id)}
+                onClick={handleAdd}
                 src={assets.add_icon_green}
                 alt=""
                 className={`h-5 transition ${
-                  isOutOfStock
+                  cartQty >= quantity
                     ? "opacity-40 cursor-not-allowed"
                     : "cursor-pointer hover:scale-110"
                 }`}
