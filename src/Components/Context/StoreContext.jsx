@@ -67,7 +67,7 @@ const StoreContextProvider = ({ children }) => {
       await axios.post(
         `${url}/api/cart/add`,
         { itemId },
-        { headers: { Authorization: `Bearer ${savedToken}` } },
+        { headers: { Authorization: `Bearer ${savedToken}` } }
       );
     } catch (err) {
       console.error("AddToCart API failed:", err);
@@ -90,7 +90,7 @@ const StoreContextProvider = ({ children }) => {
       await axios.post(
         `${url}/api/cart/remove`,
         { itemId },
-        { headers: { Authorization: `Bearer ${savedToken}` } },
+        { headers: { Authorization: `Bearer ${savedToken}` } }
       );
     } catch (err) {
       console.error("RemoveCart API failed:", err);

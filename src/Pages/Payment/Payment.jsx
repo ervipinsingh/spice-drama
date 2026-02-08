@@ -2,81 +2,35 @@ import React, { useContext, useState, useEffect } from "react";
 import { ShoppingBag, Check } from "lucide-react";
 import { StoreContext } from "../../Components/Context/StoreContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { toast } from "react-toastify";
 
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-  const {
-    getTotalCartAmount,
-    cartItems,
-    food_list,
-    url,
-    token,
-    afterOrderSuccess, // 🔥 CHANGE-3 USE
-  } = useContext(StoreContext);
+  const { getTotalCartAmount } = useContext(StoreContext);
 
   const navigate = useNavigate();
 
-  /* ---------------- PLACE ORDER (COD) ---------------- */
-  const handleCODConfirm = async () => {
-    if (getTotalCartAmount() <= 0) return;
-
+  const handleCODConfirm = () => {
     setProcessing(true);
 
-    try {
-      // 🔥 Cart → items format for backend
-      const items = Object.keys(cartItems).map((id) => {
-        const food = food_list.find((f) => f._id === id);
-        return {
-          foodId: id,
-          quantity: cartItems[id],
-          name: food?.name,
-          price: food?.price,
-        };
-      });
-
-      const orderData = {
-        items,
-        amount: getTotalCartAmount(),
-        address: "COD Address", // (replace later with real address)
-      };
-
-      const res = await axios.post(`${url}/api/order/place`, orderData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.data.success) {
-        toast.success("Order placed successfully");
-
-        // 🔥🔥 CHANGE-3 (MOST IMPORTANT LINE)
-        await afterOrderSuccess();
-
-        setOrderComplete(true);
-      } else {
-        toast.error(res.data.message || "Order failed");
-      }
-    } catch (err) {
-      console.error("Order error:", err);
-      toast.error("Order placement failed");
-    } finally {
+    setTimeout(() => {
       setProcessing(false);
-    }
+      setOrderComplete(true); // sirf state change
+    }, 1500);
   };
 
-  /* ---------------- AUTO NAVIGATE ---------------- */
   useEffect(() => {
     if (orderComplete) {
       const timer = setTimeout(() => {
         navigate("/myorders");
-      }, 2500);
+      }, 2500); // 2.5 sec delay
+
       return () => clearTimeout(timer);
     }
   }, [orderComplete, navigate]);
 
-  /* ---------------- ORDER SUCCESS UI ---------------- */
+  /* ---------------- ORDER SUCCESS ---------------- */
   if (orderComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
