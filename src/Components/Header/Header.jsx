@@ -3,44 +3,36 @@ import { assets } from "../../assets/assets";
 
 function Header() {
   return (
-    <div className="relative h-[70vh] min-h-[500px] sm:min-h-[600px] bg-cover bg-center bg-no-repeat">
+    <div className="bg-gradient-to-b from-orange-50 to-white relative w-full px-5 h-[55vh] md:h-[85vh] md:px-10">
       {/* Background Image */}
       <img
         src={assets.header_img}
-        alt="Food banner"
-        className="absolute inset-0 w-full h-full object-cover"
+        alt="header"
+        className="w-full h-full object-cover rounded"
       />
 
       {/* Overlay Content */}
-      <div className="absolute inset-0 bg-black/40 flex items-center">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-          <div className="max-w-xl lg:max-w-2xl">
-            <h1 className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 leading-tight">
-              Order your favourite food here
-            </h1>
-
-            <p className="text-white text-sm sm:text-base md:text-lg mb-6 sm:mb-8 leading-relaxed opacity-90">
-              Freshly prepared meals delivered straight from our kitchen to your
-              doorstep. Great taste, fast delivery, and quality you can trust.
-            </p>
-
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                document
-                  .getElementById("explore-menu")
-                  .scrollIntoView({ behavior: "smooth" });
-              }}
-              className="bg-white text-gray-800 px-6 py-3 sm:px-8 sm:py-3.5 md:px-10 md:py-4 
-                         rounded-full font-semibold text-sm sm:text-base md:text-lg 
-                         hover:bg-gray-100 transition-all duration-300 
-                         shadow-lg hover:shadow-xl transform hover:scale-105 
-                         active:scale-95 inline-block"
-            >
-              View Menu
-            </button>
-          </div>
-        </div>
+      <div className="absolute inset-0 flex flex-col justify-center items-start px-10 md:px-20 text-white">
+        <h1 className="text-2xl pl-8 pt-15 sm:text-4xl md:text-6xl font-medium leading-tight max-w-xl">
+          Order your <br /> favourite food here
+        </h1>
+        <p className="py-3 text-sm text-justify px-8 md:text-lg">
+          Freshly prepared meals delivered straight from our kitchen to your
+          doorstep. <br /> Great taste, fast delivery, and quality you can
+          trust.
+        </p>
+        <a
+          href="#explore-menu"
+          className="mt-4 inline-block bg-white text-black px-4 py-2 ml-8 rounded-full font-medium hover:bg-orange-400 hover:text-white transition"
+          onClick={(e) => {
+            e.preventDefault();
+            document
+              .getElementById("explore-menu")
+              .scrollIntoView({ behavior: "smooth" });
+          }}
+        >
+          View Menu
+        </a>
       </div>
     </div>
   );
