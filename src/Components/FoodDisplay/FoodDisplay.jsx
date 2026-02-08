@@ -8,7 +8,7 @@ const FoodDisplay = ({ category = "Pizza" }) => {
   return (
     <div
       id="food-display"
-      className="bg-gradient-to-b from-orange-50 to-white px-4 sm:px-6 md:px-10 lg:px-16"
+      className="bg-gradient-to-b from-orange-50 to-white px-4 sm:px-6 md:px-10 py-10 lg:px-16"
     >
       {/* Heading */}
       <h1
