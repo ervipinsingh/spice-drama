@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { ShoppingBag, Check } from "lucide-react";
 import { StoreContext } from "../../Components/Context/StoreContext";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const orderPlacedRef = useRef(false); // ✅ PREVENT DOUBLE ORDER
 
   const { getTotalCartAmount, cartItems, food_list, url, token } =
     useContext(StoreContext);
@@ -15,6 +16,10 @@ export default function PaymentPage() {
   const navigate = useNavigate();
 
   const handleCODConfirm = async () => {
+    // ✅ PREVENT DOUBLE SUBMISSION (React Strict Mode or double click)
+    if (processing || orderPlacedRef.current) return;
+
+    orderPlacedRef.current = true; // Mark as processing
     setProcessing(true);
 
     try {
@@ -38,6 +43,7 @@ export default function PaymentPage() {
       if (orderItems.length === 0) {
         toast.error("Your cart is empty");
         setProcessing(false);
+        orderPlacedRef.current = false; // Reset flag
         return;
       }
 
@@ -66,6 +72,7 @@ export default function PaymentPage() {
       } else {
         toast.error(response.data.message || "Order failed");
         setProcessing(false);
+        orderPlacedRef.current = false; // Reset flag on error
       }
     } catch (error) {
       console.error("Order Error:", error);
@@ -74,6 +81,7 @@ export default function PaymentPage() {
           "Failed to place order. Please try again.",
       );
       setProcessing(false);
+      orderPlacedRef.current = false; // Reset flag on error
     }
   };
 
