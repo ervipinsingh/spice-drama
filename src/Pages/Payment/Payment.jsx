@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-  const isSubmittingRef = useRef(false); // ✅ PREVENT DOUBLE SUBMISSION
+  const isSubmittingRef = useRef(false);
 
   const { getTotalCartAmount, cartItems, food_list, url, token, setCartItems } =
     useContext(StoreContext);
@@ -16,55 +16,78 @@ export default function PaymentPage() {
   const navigate = useNavigate();
 
   const handleCODConfirm = async () => {
-    // ✅✅✅ TRIPLE GUARD AGAINST DOUBLE SUBMISSION
-    if (processing) {
-      console.log("Already processing, skipping...");
-      return;
-    }
-    
-    if (isSubmittingRef.current) {
-      console.log("Already submitted via ref, skipping...");
+    console.log("=== HANDLE COD CONFIRM CALLED ===");
+    console.log("Current state:", {
+      processing,
+      isSubmittingRef: isSubmittingRef.current,
+      orderComplete,
+      cartItems,
+      food_list_length: food_list.length,
+    });
+
+    // ✅ PREVENT DOUBLE SUBMISSION
+    if (processing || isSubmittingRef.current || orderComplete) {
+      console.log("🚫 Blocked: Already processing");
       return;
     }
 
-    if (orderComplete) {
-      console.log("Order already complete, skipping...");
-      return;
-    }
-
-    // ✅ MARK AS PROCESSING IMMEDIATELY
+    // ✅ MARK AS PROCESSING
     isSubmittingRef.current = true;
     setProcessing(true);
 
+    console.log("🛒 Cart Items:", cartItems);
+    console.log("🍔 Food List Count:", food_list.length);
+
     try {
-      // ✅ BUILD ORDER ITEMS FROM CART
+      // ✅ SAFEGUARD: Check if food_list is loaded
+      if (!food_list || food_list.length === 0) {
+        console.log("❌ Food list not loaded yet!");
+        toast.error("Loading menu... Please try again");
+        setProcessing(false);
+        isSubmittingRef.current = false;
+        return;
+      }
+
+      // ✅ BUILD ORDER ITEMS
       const orderItems = [];
 
       for (const itemId in cartItems) {
-        if (cartItems[itemId] > 0) {
+        const quantity = cartItems[itemId];
+        console.log(`Processing item ${itemId}, qty: ${quantity}`);
+        
+        if (quantity > 0) {
           const itemInfo = food_list.find((product) => product._id === itemId);
+          console.log(`Found item info:`, itemInfo);
+          
           if (itemInfo) {
             orderItems.push({
               _id: itemInfo._id,
               name: itemInfo.name,
               price: itemInfo.price,
-              quantity: cartItems[itemId],
+              quantity: quantity,
             });
+          } else {
+            console.log(`⚠️ Item ${itemId} not found in food_list`);
           }
         }
       }
 
+      console.log("📦 Final Order Items:", orderItems);
+      console.log("📦 Order Items Count:", orderItems.length);
+
+      // ✅ VALIDATE
       if (orderItems.length === 0) {
+        console.log("❌ Cart is empty");
         toast.error("Your cart is empty");
         setProcessing(false);
         isSubmittingRef.current = false;
         return;
       }
 
-      // ✅ PREPARE ORDER DATA
+      // ✅ PREPARE ORDER
       const orderData = {
         items: orderItems,
-        amount: getTotalCartAmount() + 40, // Including delivery fee
+        amount: getTotalCartAmount() + 40,
         address: {
           street: "Default Street",
           city: "Default City",
@@ -73,59 +96,73 @@ export default function PaymentPage() {
         },
       };
 
-      console.log("📦 Placing order:", orderData);
+      console.log("📤 Sending order:", orderData);
 
-      // ✅ PLACE ORDER API CALL (ONLY ONCE)
+      // ✅ API CALL
       const response = await axios.post(`${url}/api/order/place`, orderData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ Order response:", response.data);
+      console.log("📥 Response:", response.data);
 
       if (response.data.success) {
-        // ✅ CLEAR CART IMMEDIATELY (PREVENT RE-SUBMISSION)
+        console.log("✅ Order successful!");
+        
+        // ✅ CLEAR CART IMMEDIATELY
         setCartItems({});
         
-        setOrderComplete(true);
+        // ✅ SHOW SUCCESS
         toast.success("Order placed successfully!");
         
-        // ✅ DON'T RESET FLAGS - Keep them locked
+        // ✅ SET ORDER COMPLETE (triggers redirect)
+        setOrderComplete(true);
+        
+        // Keep flags locked - don't reset
       } else {
+        console.log("❌ Order failed:", response.data.message);
         toast.error(response.data.message || "Order failed");
         setProcessing(false);
         isSubmittingRef.current = false;
       }
     } catch (error) {
       console.error("❌ Order Error:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to place order. Please try again."
-      );
+      const errorMsg = error.response?.data?.message || "Failed to place order";
+      toast.error(errorMsg);
       setProcessing(false);
       isSubmittingRef.current = false;
     }
   };
 
+  // ✅ REDIRECT AFTER SUCCESS
   useEffect(() => {
+    console.log("🔄 orderComplete changed:", orderComplete);
+    
     if (orderComplete) {
+      console.log("✅ Order complete - redirecting in 2.5s");
+      
       const timer = setTimeout(() => {
+        console.log("➡️ Navigating to /myorders");
         navigate("/myorders");
       }, 2500);
 
-      return () => clearTimeout(timer);
+      return () => {
+        console.log("🧹 Cleanup timer");
+        clearTimeout(timer);
+      };
     }
   }, [orderComplete, navigate]);
 
-  // ✅ RESET FLAGS ON COMPONENT UNMOUNT
+  // ✅ CLEANUP ON UNMOUNT
   useEffect(() => {
     return () => {
       isSubmittingRef.current = false;
     };
   }, []);
 
-  /* ---------------- ORDER SUCCESS ---------------- */
+  /* ---------------- ORDER SUCCESS SCREEN ---------------- */
   if (orderComplete) {
+    console.log("🎉 Showing success screen");
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
@@ -149,7 +186,7 @@ export default function PaymentPage() {
     );
   }
 
-  /* ---------------- COD PAGE ---------------- */
+  /* ---------------- CHECKOUT PAGE ---------------- */
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
