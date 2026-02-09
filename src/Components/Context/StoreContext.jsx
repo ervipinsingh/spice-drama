@@ -151,6 +151,7 @@ const StoreContextProvider = ({ children }) => {
   /* ================= CONTEXT VALUE ================= */
   const contextValue = {
     food_list,
+    setFoodList, // ✅ EXPORT SO COMPONENTS CAN UPDATE FOOD LIST
     cartItems,
     setCartItems,
     AddToCart,

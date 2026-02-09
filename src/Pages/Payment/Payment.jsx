@@ -8,10 +8,17 @@ import { toast } from "react-toastify";
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-  const hasSubmittedRef = useRef(false); // ✅ PERMANENT FLAG
+  const hasSubmittedRef = useRef(false);
 
-  const { getTotalCartAmount, cartItems, food_list, url, token, setCartItems } =
-    useContext(StoreContext);
+  const {
+    getTotalCartAmount,
+    cartItems,
+    food_list,
+    url,
+    token,
+    setCartItems,
+    setFoodList, // ✅ ADD THIS TO UPDATE FOOD LIST
+  } = useContext(StoreContext);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +32,20 @@ export default function PaymentPage() {
     state: "Default State",
     zip_code: "000000",
     phone: "",
+  };
+
+  // ✅ REFRESH FOOD LIST AFTER ORDER
+  const refreshFoodList = async () => {
+    try {
+      console.log("🔄 Refreshing food list...");
+      const res = await axios.get(`${url}/api/food/list`);
+      if (res.data?.success) {
+        setFoodList(res.data.data || []);
+        console.log("✅ Food list refreshed with updated stock");
+      }
+    } catch (err) {
+      console.error("Failed to refresh food list:", err);
+    }
   };
 
   const handleCODConfirm = async () => {
@@ -46,7 +67,7 @@ export default function PaymentPage() {
       return;
     }
 
-    // ✅ LOCK IMMEDIATELY (DON'T RESET THIS)
+    // ✅ LOCK IMMEDIATELY
     hasSubmittedRef.current = true;
     setProcessing(true);
 
@@ -58,7 +79,7 @@ export default function PaymentPage() {
         console.log("❌ Food list not loaded");
         toast.error("Loading menu... Please try again");
         setProcessing(false);
-        hasSubmittedRef.current = false; // Allow retry
+        hasSubmittedRef.current = false;
         return;
       }
 
@@ -74,7 +95,7 @@ export default function PaymentPage() {
               _id: itemInfo._id,
               name: itemInfo.name,
               price: itemInfo.price,
-              image: itemInfo.image, // ✅ ADD IMAGE
+              image: itemInfo.image,
               quantity: quantity,
             });
           }
@@ -95,7 +116,7 @@ export default function PaymentPage() {
       const orderData = {
         items: orderItems,
         amount: getTotalCartAmount() + 40,
-        address: deliveryInfo, // ✅ Use real address from PlaceOrder
+        address: deliveryInfo,
       };
 
       console.log("📤 Sending order to backend...");
@@ -112,26 +133,26 @@ export default function PaymentPage() {
       if (response.data.success) {
         console.log("✅ Order successful!");
 
-        // Handle duplicate detection
         if (response.data.isDuplicate) {
           console.log("⚠️ Duplicate detected by backend");
         }
 
-        // Clear cart
+        // ✅ CLEAR CART
         setCartItems({});
 
-        // Show success
+        // ✅✅✅ REFRESH FOOD LIST TO GET UPDATED STOCK
+        await refreshFoodList();
+
+        // ✅ SHOW SUCCESS
         toast.success("Order placed successfully!");
 
-        // Mark complete
+        // ✅ MARK COMPLETE
         setOrderComplete(true);
-
-        // DON'T RESET FLAGS - keep locked
       } else {
         console.log("❌ Order failed:", response.data.message);
         toast.error(response.data.message || "Order failed");
         setProcessing(false);
-        hasSubmittedRef.current = false; // Allow retry
+        hasSubmittedRef.current = false;
       }
     } catch (error) {
       console.error("❌ Order Error:", error);
@@ -150,7 +171,7 @@ export default function PaymentPage() {
       }
 
       setProcessing(false);
-      hasSubmittedRef.current = false; // Allow retry
+      hasSubmittedRef.current = false;
     }
   };
 
