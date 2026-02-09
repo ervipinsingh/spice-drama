@@ -1,11 +1,55 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import foodModel from "../models/foodModel.js";
 
 /* ================= PLACE ORDER (COD) ================= */
 const placeOrder = async (req, res) => {
   try {
-    const userId = req.user._id; // ✅ FIX
+    const userId = req.user._id;
 
+    // ✅ VALIDATE INVENTORY BEFORE PLACING ORDER
+    const { items } = req.body;
+
+    for (const item of items) {
+      const food = await foodModel.findById(item._id);
+
+      if (!food) {
+        return res.status(400).json({
+          success: false,
+          message: `Item "${item.name}" not found`,
+        });
+      }
+
+      if (food.quantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for "${food.name}". Available: ${food.quantity}, Requested: ${item.quantity}`,
+        });
+      }
+
+      if (food.isOutOfStock) {
+        return res.status(400).json({
+          success: false,
+          message: `"${food.name}" is out of stock`,
+        });
+      }
+    }
+
+    // ✅ DEDUCT QUANTITIES FROM INVENTORY
+    for (const item of items) {
+      const food = await foodModel.findById(item._id);
+
+      food.quantity -= item.quantity;
+
+      // Mark as out of stock if quantity reaches 0
+      if (food.quantity === 0) {
+        food.isOutOfStock = true;
+      }
+
+      await food.save();
+    }
+
+    // ✅ CREATE ORDER
     const newOrder = new orderModel({
       userId,
       items: req.body.items,
@@ -18,6 +62,7 @@ const placeOrder = async (req, res) => {
 
     await newOrder.save();
 
+    // ✅ CLEAR CART
     await userModel.findByIdAndUpdate(userId, {
       cartData: {},
     });

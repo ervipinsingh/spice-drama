@@ -2,29 +2,86 @@ import React, { useContext, useState, useEffect } from "react";
 import { ShoppingBag, Check } from "lucide-react";
 import { StoreContext } from "../../Components/Context/StoreContext";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
 
-  const { getTotalCartAmount } = useContext(StoreContext);
+  const { getTotalCartAmount, cartItems, food_list, url, token } =
+    useContext(StoreContext);
 
   const navigate = useNavigate();
 
-  const handleCODConfirm = () => {
+  const handleCODConfirm = async () => {
     setProcessing(true);
 
-    setTimeout(() => {
+    try {
+      // ✅ BUILD ORDER ITEMS FROM CART
+      const orderItems = [];
+
+      for (const itemId in cartItems) {
+        if (cartItems[itemId] > 0) {
+          const itemInfo = food_list.find((product) => product._id === itemId);
+          if (itemInfo) {
+            orderItems.push({
+              _id: itemInfo._id,
+              name: itemInfo.name,
+              price: itemInfo.price,
+              quantity: cartItems[itemId],
+            });
+          }
+        }
+      }
+
+      if (orderItems.length === 0) {
+        toast.error("Your cart is empty");
+        setProcessing(false);
+        return;
+      }
+
+      // ✅ PREPARE ORDER DATA
+      const orderData = {
+        items: orderItems,
+        amount: getTotalCartAmount() + 40, // Including delivery fee
+        address: {
+          street: "Default Street", // You can add address form later
+          city: "Default City",
+          state: "Default State",
+          zipcode: "000000",
+        },
+      };
+
+      // ✅ PLACE ORDER API CALL
+      const response = await axios.post(`${url}/api/order/place`, orderData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.success) {
+        setOrderComplete(true);
+        toast.success("Order placed successfully!");
+      } else {
+        toast.error(response.data.message || "Order failed");
+        setProcessing(false);
+      }
+    } catch (error) {
+      console.error("Order Error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to place order. Please try again.",
+      );
       setProcessing(false);
-      setOrderComplete(true); // sirf state change
-    }, 1500);
+    }
   };
 
   useEffect(() => {
     if (orderComplete) {
       const timer = setTimeout(() => {
         navigate("/myorders");
-      }, 2500); // 2.5 sec delay
+      }, 2500);
 
       return () => clearTimeout(timer);
     }
@@ -80,7 +137,7 @@ export default function PaymentPage() {
                 </p>
                 <p className="text-sm text-gray-700">
                   Please keep exact change ready. Our delivery partner will
-                  collect <b>₹{getTotalCartAmount()}</b> at your doorstep.
+                  collect <b>₹{getTotalCartAmount() + 40}</b> at your doorstep.
                 </p>
               </div>
 
@@ -93,7 +150,7 @@ export default function PaymentPage() {
                   ? "Placing Order..."
                   : getTotalCartAmount() <= 0
                     ? "Add items to place order"
-                    : `Place Order (₹${getTotalCartAmount()})`}
+                    : `Place Order (₹${getTotalCartAmount() + 40})`}
               </button>
             </div>
           </div>
