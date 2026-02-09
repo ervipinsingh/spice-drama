@@ -17,7 +17,7 @@ const FoodDisplay = ({ category = "Pizza" }) => {
 
       {/* Heading */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-800">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl text-gray-800">
           Top <span className="text-orange-500">Dishes</span> Near You
         </h1>
         <p className="mt-3 text-gray-500 max-w-xl mx-auto">
