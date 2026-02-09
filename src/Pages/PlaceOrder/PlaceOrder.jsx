@@ -9,11 +9,10 @@ import {
   Truck,
   Clock,
 } from "lucide-react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 export default function PlaceOrder() {
-  const { cartItems, food_list, getTotalCartAmount, url, token } =
+  const { cartItems, food_list, getTotalCartAmount, token } =
     useContext(StoreContext);
 
   const [deliveryInfo, setDeliveryInfo] = useState({
@@ -28,48 +27,43 @@ export default function PlaceOrder() {
     phone: "",
   });
 
+  const navigate = useNavigate();
+
   const onChangeHandler = (event) => {
     const name = event.target.name;
     const value = event.target.value;
     setDeliveryInfo((deliveryInfo) => ({ ...deliveryInfo, [name]: value }));
   };
 
-  const handlePlaceOrder = async (e) => {
+  const handleProceedToPayment = (e) => {
     e.preventDefault();
 
-    console.log("USER TOKEN:", token); // ✅ keep this
+    console.log("✅ Address collected, proceeding to payment...");
+    console.log("Delivery Info:", deliveryInfo);
 
+    // ✅ BUILD ORDER ITEMS (for display purposes)
     let orderItems = [];
     food_list.forEach((item) => {
       if (cartItems[item._id] > 0) {
         orderItems.push({
-          ...item,
+          _id: item._id,
+          name: item.name,
+          price: item.price,
           quantity: cartItems[item._id],
         });
       }
     });
 
-    const orderData = {
-      address: deliveryInfo,
-      items: orderItems,
-      amount: getTotalCartAmount() + 40,
-    };
-
-    await axios.post(url + "/api/order/place", orderData, {
-      headers: {
-        Authorization: `Bearer ${token}`, // ✅ FIX
-      },
-    });
-
+    // ✅ NAVIGATE TO PAYMENT PAGE WITH ADDRESS DATA
+    // (Order will be placed in PaymentPage.jsx, NOT here!)
     navigate("/payment", {
       state: {
-        orderData,
-        totalAmount: getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 40,
+        deliveryInfo: deliveryInfo, // ✅ Pass address data
+        orderItems: orderItems,
+        totalAmount: getTotalCartAmount() + 40,
       },
     });
   };
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) {
@@ -92,7 +86,7 @@ export default function PlaceOrder() {
         </div>
 
         <form
-          onSubmit={handlePlaceOrder}
+          onSubmit={handleProceedToPayment}
           className="grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           {/* LEFT */}
