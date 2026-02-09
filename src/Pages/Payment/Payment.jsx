@@ -74,6 +74,7 @@ export default function PaymentPage() {
               _id: itemInfo._id,
               name: itemInfo.name,
               price: itemInfo.price,
+              image: itemInfo.image, // ✅ ADD IMAGE
               quantity: quantity,
             });
           }

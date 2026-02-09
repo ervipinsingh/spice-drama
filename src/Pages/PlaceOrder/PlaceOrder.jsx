@@ -49,6 +49,7 @@ export default function PlaceOrder() {
           _id: item._id,
           name: item.name,
           price: item.price,
+          image: item.image, // ✅ ADD IMAGE
           quantity: cartItems[item._id],
         });
       }
