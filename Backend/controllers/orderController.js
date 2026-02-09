@@ -6,10 +6,39 @@ import foodModel from "../models/foodModel.js";
 const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id;
-
-    // ✅ VALIDATE INVENTORY BEFORE PLACING ORDER
     const { items } = req.body;
 
+    console.log("📦 Received order request from user:", userId);
+
+    // ✅✅✅ IDEMPOTENCY CHECK - PREVENT DUPLICATE ORDERS
+    // Check if there's a recent order with exact same items within last 10 seconds
+    const tenSecondsAgo = new Date(Date.now() - 10000);
+    const recentOrder = await orderModel.findOne({
+      userId,
+      createdAt: { $gte: tenSecondsAgo },
+      status: "Food Processing",
+    });
+
+    if (recentOrder) {
+      // Check if items match
+      const recentItemIds = recentOrder.items.map((i) => i._id).sort();
+      const currentItemIds = items.map((i) => i._id).sort();
+
+      const isSameOrder =
+        JSON.stringify(recentItemIds) === JSON.stringify(currentItemIds);
+
+      if (isSameOrder) {
+        console.log("⚠️ DUPLICATE ORDER DETECTED - Returning existing order");
+        return res.json({
+          success: true,
+          message: "Order already placed",
+          orderId: recentOrder._id,
+          isDuplicate: true,
+        });
+      }
+    }
+
+    // ✅ VALIDATE INVENTORY BEFORE PLACING ORDER
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
@@ -47,6 +76,7 @@ const placeOrder = async (req, res) => {
       }
 
       await food.save();
+      console.log(`✅ Updated ${food.name}: ${food.quantity} remaining`);
     }
 
     // ✅ CREATE ORDER
@@ -61,6 +91,7 @@ const placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
+    console.log("✅ Order created:", newOrder._id);
 
     // ✅ CLEAR CART
     await userModel.findByIdAndUpdate(userId, {
@@ -73,7 +104,7 @@ const placeOrder = async (req, res) => {
       orderId: newOrder._id,
     });
   } catch (error) {
-    console.error("PLACE ORDER ERROR:", error);
+    console.error("❌ PLACE ORDER ERROR:", error);
     res.status(500).json({ success: false, message: "Order placement failed" });
   }
 };

@@ -8,18 +8,32 @@ import { toast } from "react-toastify";
 export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
-  const orderPlacedRef = useRef(false); // ✅ PREVENT DOUBLE ORDER
+  const isSubmittingRef = useRef(false); // ✅ PREVENT DOUBLE SUBMISSION
 
-  const { getTotalCartAmount, cartItems, food_list, url, token } =
+  const { getTotalCartAmount, cartItems, food_list, url, token, setCartItems } =
     useContext(StoreContext);
 
   const navigate = useNavigate();
 
   const handleCODConfirm = async () => {
-    // ✅ PREVENT DOUBLE SUBMISSION (React Strict Mode or double click)
-    if (processing || orderPlacedRef.current) return;
+    // ✅✅✅ TRIPLE GUARD AGAINST DOUBLE SUBMISSION
+    if (processing) {
+      console.log("Already processing, skipping...");
+      return;
+    }
+    
+    if (isSubmittingRef.current) {
+      console.log("Already submitted via ref, skipping...");
+      return;
+    }
 
-    orderPlacedRef.current = true; // Mark as processing
+    if (orderComplete) {
+      console.log("Order already complete, skipping...");
+      return;
+    }
+
+    // ✅ MARK AS PROCESSING IMMEDIATELY
+    isSubmittingRef.current = true;
     setProcessing(true);
 
     try {
@@ -43,7 +57,7 @@ export default function PaymentPage() {
       if (orderItems.length === 0) {
         toast.error("Your cart is empty");
         setProcessing(false);
-        orderPlacedRef.current = false; // Reset flag
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -52,36 +66,44 @@ export default function PaymentPage() {
         items: orderItems,
         amount: getTotalCartAmount() + 40, // Including delivery fee
         address: {
-          street: "Default Street", // You can add address form later
+          street: "Default Street",
           city: "Default City",
           state: "Default State",
           zipcode: "000000",
         },
       };
 
-      // ✅ PLACE ORDER API CALL
+      console.log("📦 Placing order:", orderData);
+
+      // ✅ PLACE ORDER API CALL (ONLY ONCE)
       const response = await axios.post(`${url}/api/order/place`, orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      console.log("✅ Order response:", response.data);
+
       if (response.data.success) {
+        // ✅ CLEAR CART IMMEDIATELY (PREVENT RE-SUBMISSION)
+        setCartItems({});
+        
         setOrderComplete(true);
         toast.success("Order placed successfully!");
+        
+        // ✅ DON'T RESET FLAGS - Keep them locked
       } else {
         toast.error(response.data.message || "Order failed");
         setProcessing(false);
-        orderPlacedRef.current = false; // Reset flag on error
+        isSubmittingRef.current = false;
       }
     } catch (error) {
-      console.error("Order Error:", error);
+      console.error("❌ Order Error:", error);
       toast.error(
-        error.response?.data?.message ||
-          "Failed to place order. Please try again.",
+        error.response?.data?.message || "Failed to place order. Please try again."
       );
       setProcessing(false);
-      orderPlacedRef.current = false; // Reset flag on error
+      isSubmittingRef.current = false;
     }
   };
 
@@ -94,6 +116,13 @@ export default function PaymentPage() {
       return () => clearTimeout(timer);
     }
   }, [orderComplete, navigate]);
+
+  // ✅ RESET FLAGS ON COMPONENT UNMOUNT
+  useEffect(() => {
+    return () => {
+      isSubmittingRef.current = false;
+    };
+  }, []);
 
   /* ---------------- ORDER SUCCESS ---------------- */
   if (orderComplete) {
@@ -151,7 +180,7 @@ export default function PaymentPage() {
 
               <button
                 onClick={handleCODConfirm}
-                disabled={processing || getTotalCartAmount() <= 0}
+                disabled={processing || getTotalCartAmount() <= 0 || orderComplete}
                 className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-lg font-semibold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {processing

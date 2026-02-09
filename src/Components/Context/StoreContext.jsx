@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 export const StoreContext = createContext(null);
@@ -8,6 +8,8 @@ const StoreContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [food_list, setFoodList] = useState([]);
   const [token, setToken] = useState("");
+
+  const hasInitialized = useRef(false); // ✅ PREVENT DOUBLE INITIALIZATION
 
   /* ================= BASE URL ================= */
   const rawUrl = import.meta.env.VITE_USER_API || "";
@@ -102,7 +104,7 @@ const StoreContextProvider = ({ children }) => {
   };
 
   const loadCartData = async (savedToken) => {
-    if (!savedToken) return; // 🔥 CRITICAL GUARD
+    if (!savedToken) return;
 
     try {
       const res = await axios.get(`${url}/api/cart/get`, {
@@ -113,7 +115,6 @@ const StoreContextProvider = ({ children }) => {
         setCartItems(res.data.cartData || {});
       }
     } catch (err) {
-      // ❌ 401 is EXPECTED when token invalid — ignore silently
       if (err.response?.status !== 401) {
         console.error("Cart load failed:", err);
       }
@@ -123,6 +124,15 @@ const StoreContextProvider = ({ children }) => {
 
   /* ================= INITIAL LOAD ================= */
   useEffect(() => {
+    // ✅✅✅ PREVENT DOUBLE INITIALIZATION IN REACT STRICT MODE
+    if (hasInitialized.current) {
+      console.log("⚠️ Already initialized, skipping...");
+      return;
+    }
+
+    hasInitialized.current = true;
+    console.log("🚀 Initializing StoreContext...");
+
     const init = async () => {
       await fetchFoodList();
 
