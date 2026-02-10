@@ -34,7 +34,7 @@ const Cart = () => {
     }
   };
 
-  // ✅ CHECK IF CART HAS STOCK ISSUES
+  // CHECK IF CART HAS STOCK ISSUES
   const getStockIssues = () => {
     const issues = [];
 
@@ -83,7 +83,7 @@ const Cart = () => {
           </h1>
         </div>
 
-        {/* ✅ STOCK ISSUES ALERT */}
+        {/* STOCK ISSUES ALERT */}
         {hasStockIssues && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
@@ -136,7 +136,7 @@ const Cart = () => {
               <div className="divide-y divide-gray-200">
                 {food_list.map((item) => {
                   if (cartItems[item._id] > 0) {
-                    // ✅ CHECK STOCK STATUS
+                    // CHECK STOCK STATUS
                     const cartQty = cartItems[item._id];
                     const availableQty = item.quantity || 0;
                     const isOutOfStock =
@@ -164,7 +164,7 @@ const Cart = () => {
                                 {item.name}
                               </h3>
 
-                              {/* ✅ STOCK STATUS BADGES */}
+                              {/* STOCK STATUS BADGES */}
                               {isOutOfStock && (
                                 <span className="inline-block mt-1 px-2 py-0.5 bg-red-500 text-white text-xs font-semibold rounded">
                                   OUT OF STOCK
@@ -228,7 +228,7 @@ const Cart = () => {
 
                               <button
                                 onClick={() => {
-                                  // ✅ PREVENT ADDING MORE THAN AVAILABLE STOCK
+                                  // PREVENT ADDING MORE THAN AVAILABLE STOCK
                                   if (isOutOfStock) {
                                     alert(`${item.name} is out of stock`);
                                     return;
@@ -338,7 +338,7 @@ const Cart = () => {
                   </div>
                 </div>
 
-                {/* ✅ CHECKOUT BUTTON WITH STOCK VALIDATION */}
+                {/* CHECKOUT BUTTON WITH STOCK VALIDATION */}
                 <button
                   disabled={subtotal === 0 || hasStockIssues}
                   onClick={() => navigate("/order")}
@@ -361,7 +361,7 @@ const Cart = () => {
                   )}
                 </button>
 
-                {/* ✅ STOCK WARNING */}
+                {/* STOCK WARNING */}
                 {hasStockIssues && (
                   <p className="mt-2 text-xs text-red-600 text-center">
                     Remove out-of-stock items or adjust quantities

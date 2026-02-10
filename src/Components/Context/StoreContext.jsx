@@ -9,7 +9,7 @@ const StoreContextProvider = ({ children }) => {
   const [food_list, setFoodList] = useState([]);
   const [token, setToken] = useState("");
 
-  const hasInitialized = useRef(false); // ✅ PREVENT DOUBLE INITIALIZATION
+  const hasInitialized = useRef(false);
 
   /* ================= BASE URL ================= */
   const rawUrl = import.meta.env.VITE_USER_API || "";
@@ -33,7 +33,6 @@ const StoreContextProvider = ({ children }) => {
   /* ================= CART ACTIONS ================= */
 
   const AddToCart = async (itemId) => {
-    // optimistic UI
     setCartItems((prev) => ({
       ...prev,
       [itemId]: (prev[itemId] || 0) + 1,
@@ -124,7 +123,7 @@ const StoreContextProvider = ({ children }) => {
 
   /* ================= INITIAL LOAD ================= */
   useEffect(() => {
-    // ✅✅✅ PREVENT DOUBLE INITIALIZATION IN REACT STRICT MODE
+    // PREVENT DOUBLE INITIALIZATION IN REACT STRICT MODE
     if (hasInitialized.current) {
       console.log("⚠️ Already initialized, skipping...");
       return;
@@ -151,7 +150,7 @@ const StoreContextProvider = ({ children }) => {
   /* ================= CONTEXT VALUE ================= */
   const contextValue = {
     food_list,
-    setFoodList, // ✅ EXPORT SO COMPONENTS CAN UPDATE FOOD LIST
+    setFoodList,
     cartItems,
     setCartItems,
     AddToCart,

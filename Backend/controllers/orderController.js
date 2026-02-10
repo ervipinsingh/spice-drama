@@ -10,7 +10,7 @@ const placeOrder = async (req, res) => {
 
     console.log("📦 Received order request from user:", userId);
 
-    // ✅✅✅ IDEMPOTENCY CHECK - PREVENT DUPLICATE ORDERS
+    // IDEMPOTENCY CHECK - PREVENT DUPLICATE ORDERS
     // Check if there's a recent order with exact same items within last 10 seconds
     const tenSecondsAgo = new Date(Date.now() - 10000);
     const recentOrder = await orderModel.findOne({
@@ -38,7 +38,7 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ✅ VALIDATE INVENTORY BEFORE PLACING ORDER
+    // VALIDATE INVENTORY BEFORE PLACING ORDER
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
@@ -64,7 +64,7 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ✅ DEDUCT QUANTITIES FROM INVENTORY
+    // DEDUCT QUANTITIES FROM INVENTORY
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
@@ -76,10 +76,10 @@ const placeOrder = async (req, res) => {
       }
 
       await food.save();
-      console.log(`✅ Updated ${food.name}: ${food.quantity} remaining`);
+      console.log(`Updated ${food.name}: ${food.quantity} remaining`);
     }
 
-    // ✅ CREATE ORDER
+    // CREATE ORDER
     const newOrder = new orderModel({
       userId,
       items: req.body.items,
@@ -91,9 +91,9 @@ const placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
-    console.log("✅ Order created:", newOrder._id);
+    console.log("Order created:", newOrder._id);
 
-    // ✅ CLEAR CART
+    // CLEAR CART
     await userModel.findByIdAndUpdate(userId, {
       cartData: {},
     });

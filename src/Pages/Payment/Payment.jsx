@@ -17,13 +17,13 @@ export default function PaymentPage() {
     url,
     token,
     setCartItems,
-    setFoodList, // ✅ ADD THIS TO UPDATE FOOD LIST
+    setFoodList,
   } = useContext(StoreContext);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ GET ADDRESS DATA FROM PlaceOrder PAGE
+  // GET ADDRESS DATA FROM PlaceOrder PAGE
   const deliveryInfo = location.state?.deliveryInfo || {
     first_name: "",
     last_name: "",
@@ -34,14 +34,14 @@ export default function PaymentPage() {
     phone: "",
   };
 
-  // ✅ REFRESH FOOD LIST AFTER ORDER
+  // REFRESH FOOD LIST AFTER ORDER
   const refreshFoodList = async () => {
     try {
       console.log("🔄 Refreshing food list...");
       const res = await axios.get(`${url}/api/food/list`);
       if (res.data?.success) {
         setFoodList(res.data.data || []);
-        console.log("✅ Food list refreshed with updated stock");
+        console.log("Food list refreshed with updated stock");
       }
     } catch (err) {
       console.error("Failed to refresh food list:", err);
@@ -51,7 +51,7 @@ export default function PaymentPage() {
   const handleCODConfirm = async () => {
     console.log("=== ORDER BUTTON CLICKED ===");
 
-    // ✅✅✅ TRIPLE PROTECTION
+    // TRIPLE PROTECTION
     if (hasSubmittedRef.current) {
       console.log("🚫 Already submitted (ref flag)");
       return;
@@ -67,14 +67,14 @@ export default function PaymentPage() {
       return;
     }
 
-    // ✅ LOCK IMMEDIATELY
+    // LOCK IMMEDIATELY
     hasSubmittedRef.current = true;
     setProcessing(true);
 
     console.log("🔒 Locked - proceeding with order");
 
     try {
-      // ✅ VALIDATE FOOD LIST
+      // VALIDATE FOOD LIST
       if (!food_list || food_list.length === 0) {
         console.log("❌ Food list not loaded");
         toast.error("Loading menu... Please try again");
@@ -83,7 +83,7 @@ export default function PaymentPage() {
         return;
       }
 
-      // ✅ BUILD ORDER ITEMS
+      // BUILD ORDER ITEMS
       const orderItems = [];
 
       for (const itemId in cartItems) {
@@ -112,7 +112,7 @@ export default function PaymentPage() {
 
       console.log("📦 Order Items:", orderItems);
 
-      // ✅ PREPARE ORDER WITH ACTUAL ADDRESS
+      // PREPARE ORDER WITH ACTUAL ADDRESS
       const orderData = {
         items: orderItems,
         amount: getTotalCartAmount() + 40,
@@ -122,14 +122,14 @@ export default function PaymentPage() {
       console.log("📤 Sending order to backend...");
       console.log("Address:", deliveryInfo);
 
-      // ✅ PLACE ORDER
+      // PLACE ORDER
       const response = await axios.post(`${url}/api/order/place`, orderData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       console.log("📥 Backend response:", response.data);
 
-      // ✅ HANDLE RESPONSE
+      // HANDLE RESPONSE
       if (response.data.success) {
         console.log("✅ Order successful!");
 
@@ -137,16 +137,16 @@ export default function PaymentPage() {
           console.log("⚠️ Duplicate detected by backend");
         }
 
-        // ✅ CLEAR CART
+        // CLEAR CART
         setCartItems({});
 
-        // ✅✅✅ REFRESH FOOD LIST TO GET UPDATED STOCK
+        // REFRESH FOOD LIST TO GET UPDATED STOCK
         await refreshFoodList();
 
-        // ✅ SHOW SUCCESS
+        // SHOW SUCCESS
         toast.success("Order placed successfully!");
 
-        // ✅ MARK COMPLETE
+        // MARK COMPLETE
         setOrderComplete(true);
       } else {
         console.log("❌ Order failed:", response.data.message);
@@ -157,7 +157,7 @@ export default function PaymentPage() {
     } catch (error) {
       console.error("❌ Order Error:", error);
 
-      // ✅ HANDLE RATE LIMIT (429)
+      // HANDLE RATE LIMIT (429)
       if (error.response?.status === 429) {
         const msg =
           error.response.data.message ||
@@ -175,10 +175,10 @@ export default function PaymentPage() {
     }
   };
 
-  // ✅ REDIRECT ON SUCCESS
+  // REDIRECT ON SUCCESS
   useEffect(() => {
     if (orderComplete) {
-      console.log("✅ Redirecting to orders in 2.5s...");
+      console.log("Redirecting to orders in 2.5s...");
 
       const timer = setTimeout(() => {
         console.log("➡️ Navigating now");

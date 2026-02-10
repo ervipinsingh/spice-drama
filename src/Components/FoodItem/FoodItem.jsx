@@ -6,7 +6,7 @@ const FoodItem = ({ id, name, description, price, image }) => {
   const { cartItems, AddToCart, removeCart, getImageUrl, food_list } =
     useContext(StoreContext);
 
-  // ✅ FIND CURRENT ITEM TO CHECK STOCK
+  // FIND CURRENT ITEM TO CHECK STOCK
   const currentItem = food_list.find((item) => item._id === id);
   const isOutOfStock = currentItem?.isOutOfStock || currentItem?.quantity === 0;
   const availableQuantity = currentItem?.quantity || 0;
@@ -24,14 +24,14 @@ const FoodItem = ({ id, name, description, price, image }) => {
           <div className="relative">
             <img src={image} alt={name} className="w-full h-40 object-cover" />
 
-            {/* ✅ OUT OF STOCK BADGE */}
+            {/* OUT OF STOCK BADGE */}
             {isOutOfStock && (
               <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                 OUT OF STOCK
               </div>
             )}
 
-            {/* ✅ LOW STOCK WARNING */}
+            {/* LOW STOCK WARNING */}
             {!isOutOfStock &&
               availableQuantity > 0 &&
               availableQuantity <= 5 && (
@@ -69,7 +69,7 @@ const FoodItem = ({ id, name, description, price, image }) => {
 
                 <img
                   onClick={() => {
-                    // ✅ CHECK IF CART QUANTITY WILL EXCEED AVAILABLE STOCK
+                    // CHECK IF CART QUANTITY WILL EXCEED AVAILABLE STOCK
                     const currentCartQty = cartItems[id] || 0;
                     if (currentCartQty >= availableQuantity) {
                       alert(
@@ -99,7 +99,7 @@ const FoodItem = ({ id, name, description, price, image }) => {
             <div className="flex justify-between items-center">
               <p className="text-black text-lg font-bold">₹{price}</p>
 
-              {/* ✅ STOCK INDICATOR */}
+              {/* STOCK INDICATOR */}
               {!isOutOfStock && (
                 <p className="text-xs text-gray-500">
                   Stock: {availableQuantity}

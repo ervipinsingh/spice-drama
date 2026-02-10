@@ -9,7 +9,7 @@ const addFood = async (req, res) => {
       return res.json({ success: false, message: "Image is required" });
     }
 
-    // 🔥 SAFE PARSING (IMPORTANT)
+    // SAFE PARSING
     const name = req.body.name;
     const description = req.body.description;
     const price = Number(req.body.price);

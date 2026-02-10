@@ -38,10 +38,10 @@ export default function PlaceOrder() {
   const handleProceedToPayment = (e) => {
     e.preventDefault();
 
-    console.log("✅ Address collected, proceeding to payment...");
+    console.log("Address collected, proceeding to payment...");
     console.log("Delivery Info:", deliveryInfo);
 
-    // ✅ BUILD ORDER ITEMS (for display purposes)
+    // BUILD ORDER ITEMS (for display purposes)
     let orderItems = [];
     food_list.forEach((item) => {
       if (cartItems[item._id] > 0) {
@@ -49,17 +49,17 @@ export default function PlaceOrder() {
           _id: item._id,
           name: item.name,
           price: item.price,
-          image: item.image, // ✅ ADD IMAGE
+          image: item.image,
           quantity: cartItems[item._id],
         });
       }
     });
 
-    // ✅ NAVIGATE TO PAYMENT PAGE WITH ADDRESS DATA
+    // NAVIGATE TO PAYMENT PAGE WITH ADDRESS DATA
     // (Order will be placed in PaymentPage.jsx, NOT here!)
     navigate("/payment", {
       state: {
-        deliveryInfo: deliveryInfo, // ✅ Pass address data
+        deliveryInfo: deliveryInfo,
         orderItems: orderItems,
         totalAmount: getTotalCartAmount() + 40,
       },
