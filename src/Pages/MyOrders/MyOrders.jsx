@@ -5,12 +5,18 @@ import axios from "axios";
 const MyOrders = () => {
   const [data, setData] = useState([]);
   const [openBillId, setOpenBillId] = useState(null);
-  const { url, token, getImageUrl } = useContext(StoreContext);
+  const [loading, setLoading] = useState(true); // ✅ Added loading state
+  const { url, token } = useContext(StoreContext);
 
   const fetchOrders = async () => {
     try {
+      setLoading(true); // start loading
+
       const savedToken = localStorage.getItem("token");
-      if (!savedToken) return;
+      if (!savedToken) {
+        setLoading(false);
+        return;
+      }
 
       const response = await axios.post(
         url + "/api/order/userorders",
@@ -25,6 +31,8 @@ const MyOrders = () => {
       setData(response.data.data || []);
     } catch (error) {
       console.error("Fetch orders failed:", error);
+    } finally {
+      setLoading(false); // stop loading
     }
   };
 
@@ -38,7 +46,6 @@ const MyOrders = () => {
 
   useEffect(() => {
     if (token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchOrders();
     }
   }, [token]);
@@ -48,7 +55,21 @@ const MyOrders = () => {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">My Orders</h1>
 
-        {data.length === 0 ? (
+        {/* ✅ LOADING STATE */}
+        {loading ? (
+          <div className="bg-white rounded-xl shadow p-12 text-center">
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+              <h2 className="mt-4 text-xl font-semibold text-gray-600">
+                📦 Loading your orders...
+              </h2>
+              <p className="text-gray-500">
+                Please wait while we fetch your recent orders.
+              </p>
+            </div>
+          </div>
+        ) : data.length === 0 ? (
+          /* ✅ NO ORDERS STATE */
           <div className="bg-white rounded-xl shadow p-12 text-center">
             <h2 className="text-xl font-semibold text-gray-600 mb-2">
               No orders yet
@@ -58,6 +79,7 @@ const MyOrders = () => {
             </p>
           </div>
         ) : (
+          /* ✅ ORDERS LIST */
           <div className="space-y-6">
             {data.map((order, index) => (
               <div
@@ -151,7 +173,7 @@ const MyOrders = () => {
                     </div>
                   </div>
 
-                  {/* BILL DETAILS (TOGGLE) */}
+                  {/* BILL DETAILS */}
                   <div
                     className={`
                       overflow-hidden transition-all duration-500 ease-in-out
@@ -182,7 +204,7 @@ const MyOrders = () => {
                     </div>
                   </div>
 
-                  {/* TRACK */}
+                  {/* TRACK BUTTON */}
                   <button
                     onClick={fetchOrders}
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-lg transition"
