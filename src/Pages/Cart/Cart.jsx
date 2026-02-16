@@ -170,18 +170,18 @@ const Cart = () => {
                                   OUT OF STOCK
                                 </span>
                               )}
-                              {!isOutOfStock && exceedsStock && (
+                              {/* {!isOutOfStock && exceedsStock && (
                                 <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-500 text-white text-xs font-semibold rounded">
                                   Only {availableQty} available
                                 </span>
-                              )}
-                              {!isOutOfStock &&
+                              )} */}
+                              {/* {!isOutOfStock &&
                                 !exceedsStock &&
                                 availableQty <= 5 && (
                                   <span className="inline-block mt-1 px-2 py-0.5 bg-orange-500 text-white text-xs font-semibold rounded">
                                     Low stock: {availableQty} left
                                   </span>
-                                )}
+                                )} */}
 
                               <p className="text-sm text-gray-500 mt-1 md:hidden">
                                 ₹{item.price}
