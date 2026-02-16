@@ -32,13 +32,13 @@ const FoodItem = ({ id, name, description, price, image }) => {
             )}
 
             {/* LOW STOCK WARNING */}
-            {!isOutOfStock &&
+            {/* {!isOutOfStock &&
               availableQuantity > 0 &&
               availableQuantity <= 5 && (
                 <div className="absolute top-2 left-2 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-bold">
                   Only {availableQuantity} left
                 </div>
-              )}
+              )} */}
 
             {/* Add / Counter Buttons */}
             {!cartItems[id] ? (
@@ -100,11 +100,11 @@ const FoodItem = ({ id, name, description, price, image }) => {
               <p className="text-black text-lg font-bold">₹{price}</p>
 
               {/* STOCK INDICATOR */}
-              {!isOutOfStock && (
+              {/* {!isOutOfStock && (
                 <p className="text-xs text-gray-500">
                   Stock: {availableQuantity}
                 </p>
-              )}
+              )} */}
             </div>
           </div>
         </div>

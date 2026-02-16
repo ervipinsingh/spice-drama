@@ -36,7 +36,7 @@ const FoodDisplay = ({ category = "Pizza" }) => {
         {food_list.length === 0 ? (
           <div className="col-span-full flex justify-center items-center py-20">
             <p className="text-gray-500 text-lg bg-white px-6 py-4 rounded-xl shadow-sm">
-              😕 No food items available right now
+              🍽️ Loading delicious food for you...
             </p>
           </div>
         ) : (
