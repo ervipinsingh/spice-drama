@@ -96,7 +96,7 @@ function Contact() {
                   </button>
 
                   <a
-                    href="mailto:support@spicedrama.com"
+                    href="mailto:order@spicedrama.com"
                     className="w-full sm:w-auto bg-white/20 text-white border border-white px-6 py-3 rounded-full font-semibold flex justify-center items-center gap-2"
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -112,7 +112,7 @@ function Contact() {
                     <Clock className="w-5 h-5" />
                     <div>
                       <p className="font-semibold">Operating Hours</p>
-                      <p className="text-sm">10 AM - 11 PM</p>
+                      <p className="text-sm">12 PM - 10 PM</p>
                     </div>
                   </div>
                 </div>
