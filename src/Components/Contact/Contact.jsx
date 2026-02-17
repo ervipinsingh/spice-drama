@@ -41,20 +41,20 @@ function Contact() {
               {
                 icon: <Phone className="w-6 h-6 text-white" />,
                 title: "Call Us",
-                text: "Mon-Sun, 10 AM - 11 PM",
+                text: "Mon-Sun, 12 PM - 10 PM",
                 value: "+91 9716159710",
               },
               {
                 icon: <Mail className="w-6 h-6 text-white" />,
                 title: "Email Us",
                 text: "Quick response within 24hrs",
-                value: "support@spicedrama.com",
+                value: "order@spicedrama.com",
               },
               {
                 icon: <MapPin className="w-6 h-6 text-white" />,
                 title: "Visit Us",
                 text: "Cloud Kitchen Location",
-                value: "Ghaziabad, Uttar Pradesh, India",
+                value: "Akash Nagar, Ghaziabad, Uttar Pradesh",
               },
             ].map((item, i) => (
               <div
