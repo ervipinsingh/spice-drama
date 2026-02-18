@@ -66,6 +66,12 @@ function Navbar() {
               About us
             </Link>
             <Link
+              to="/menu"
+              className="hover:text-orange-400 transition duration-300 hover:scale-110"
+            >
+              Menu
+            </Link>
+            <Link
               to="/services"
               className="hover:text-orange-400 transition duration-300 hover:scale-110"
             >

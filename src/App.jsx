@@ -4,6 +4,7 @@ import AuthLayout from "./Layout/Authlayout";
 import Home from "./Pages/Home/Home";
 import About from "./Pages/About/About";
 import Services from "./Pages/Services/Services";
+import Menu from "./Pages/Menu/Menu";
 import Cart from "./Pages/Cart/Cart";
 import PlaceOrder from "./Pages/PlaceOrder/PlaceOrder";
 import Verify from "./Pages/Verify/Verify";
@@ -33,6 +34,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/menu" element={<Menu />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/order" element={<PlaceOrder />} />
               <Route path="/payment" element={<Payment />} />
