@@ -1,40 +1,18 @@
-import Promo from "../models/promoModel.js";
+import express from "express";
+import {
+  createPromo,
+  applyPromo,
+  getAllPromos,
+  togglePromoStatus,
+  deletePromo,
+} from "../controllers/promoController.js";
 
-export const applyPromo = async (req, res) => {
-  try {
-    const { code, cartTotal } = req.body;
+const promoRouter = express.Router();
 
-    const promo = await Promo.findOne({ code: code.toUpperCase() });
+promoRouter.post("/create", createPromo);
+promoRouter.post("/apply", applyPromo);
+promoRouter.get("/list", getAllPromos);
+promoRouter.patch("/toggle/:id", togglePromoStatus);
+promoRouter.delete("/delete/:id", deletePromo);
 
-    if (!promo || !promo.isActive) {
-      return res.json({ success: false, message: "Invalid Promo Code" });
-    }
-
-    if (promo.expiryDate < new Date()) {
-      return res.json({ success: false, message: "Promo Code Expired" });
-    }
-
-    if (cartTotal < promo.minOrderAmount) {
-      return res.json({
-        success: false,
-        message: `Minimum order ₹${promo.minOrderAmount} required`,
-      });
-    }
-
-    let discount = 0;
-
-    if (promo.discountType === "percentage") {
-      discount = (cartTotal * promo.discountValue) / 100;
-    } else {
-      discount = promo.discountValue;
-    }
-
-    res.json({
-      success: true,
-      discount,
-      finalAmount: cartTotal - discount,
-    });
-  } catch (error) {
-    res.json({ success: false, message: "Error applying promo" });
-  }
-};
+export default promoRouter;

@@ -8,6 +8,7 @@ import foodRouter from "./routes/foodRoutes.js";
 import userRouter from "./routes/userRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
+import promoRouter from "./routes/promoRoute.js";
 
 /* ================= APP CONFIG ================= */
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
+app.use("/api/promo", promoRouter);
 
 /* ================= ROOT ================= */
 app.get("/", (req, res) => {
