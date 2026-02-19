@@ -62,7 +62,7 @@ function Navbar() {
               to="/about"
               className="hover:text-orange-400 transition duration-300 hover:scale-110"
             >
-              About us
+              About Us
             </Link>
             <Link
               to="/menu"
@@ -189,7 +189,10 @@ function Navbar() {
                 Home
               </Link>
               <Link to="/about" onClick={() => setMenuOpen(false)}>
-                About
+                About Us
+              </Link>
+              <Link to="/menu" onClick={() => setMenuOpen(false)}>
+                Menu
               </Link>
               <Link to="/services" onClick={() => setMenuOpen(false)}>
                 Services
