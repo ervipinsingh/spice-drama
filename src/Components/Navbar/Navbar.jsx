@@ -2,18 +2,18 @@ import React, { useContext, useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
-import AuthPage from "../Authentication/AuthPage";
 import { AnimatePresence, motion } from "framer-motion";
 import { StoreContext } from "../Context/StoreContext";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const profileRef = useRef(null); // 👈 ADDED
+  const profileRef = useRef(null);
 
-  const { token, setToken } = useContext(StoreContext);
+  const { token, setToken, cartItems, setShowLogin } = useContext(StoreContext);
+
+  const hasItemsInCart = Object.keys(cartItems).length > 0;
 
   const navigate = useNavigate();
 
@@ -24,7 +24,6 @@ function Navbar() {
     navigate("/");
   };
 
-  // 👇 ADDED (CLICK OUTSIDE HANDLER)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -93,20 +92,21 @@ function Navbar() {
 
           {/* Right */}
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/cart">
-              <FaShoppingCart className="text-xl text-gray-600 hover:text-orange-500 transition" />
-            </Link>
+            {token && hasItemsInCart && (
+              <Link to="/cart">
+                <FaShoppingCart className="text-xl text-gray-600 hover:text-orange-500 transition" />
+              </Link>
+            )}
 
             {!token ? (
               <button
-                onClick={() => setShowAuth(true)}
+                onClick={() => setShowLogin(true)}
                 className="px-5 py-1.5 rounded-full border border-orange-400 text-orange-500 hover:bg-orange-500 hover:text-white transition"
               >
                 Sign in
               </button>
             ) : (
               <div className="relative" ref={profileRef}>
-                {/* Avatar */}
                 <motion.img
                   src="profile.png"
                   alt="profile"
@@ -115,7 +115,6 @@ function Navbar() {
                   onClick={() => setProfileOpen(!profileOpen)}
                 />
 
-                {/* Dropdown */}
                 <AnimatePresence>
                   {profileOpen && (
                     <motion.div
@@ -154,11 +153,6 @@ function Navbar() {
           </button>
         </div>
       </div>
-
-      {/* AUTH MODAL */}
-      <AnimatePresence>
-        {showAuth && <AuthPage setShowAuth={setShowAuth} />}
-      </AnimatePresence>
 
       {/* MOBILE OVERLAY */}
       <AnimatePresence>
@@ -200,15 +194,18 @@ function Navbar() {
               <Link to="/services" onClick={() => setMenuOpen(false)}>
                 Services
               </Link>
-              <Link to="/cart" onClick={() => setMenuOpen(false)}>
-                Cart
-              </Link>
+
+              {token && hasItemsInCart && (
+                <Link to="/cart" onClick={() => setMenuOpen(false)}>
+                  Cart
+                </Link>
+              )}
 
               {!token ? (
                 <button
                   onClick={() => {
                     setMenuOpen(false);
-                    setTimeout(() => setShowAuth(true), 300);
+                    setTimeout(() => setShowLogin(true), 300);
                   }}
                   className="mt-6 border rounded-full py-2 text-orange-500 border-orange-400 hover:bg-orange-500 hover:text-white transition"
                 >

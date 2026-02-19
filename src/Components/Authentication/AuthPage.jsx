@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { StoreContext } from "../Context/StoreContext";
 import axios from "axios";
 
-function AuthPage({ setShowAuth }) {
+function AuthPage() {
   const [isSignup, setIsSignup] = useState(true);
-  const { url, setToken } = useContext(StoreContext);
+  const { url, setToken, setShowLogin } = useContext(StoreContext);
 
   const [data, setData] = useState({
     name: "",
@@ -13,13 +13,11 @@ function AuthPage({ setShowAuth }) {
     password: "",
   });
 
-  // Input change handler
   const onChangeHandler = (event) => {
     const { name, value } = event.target;
     setData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Login / Register submit
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
@@ -32,7 +30,7 @@ function AuthPage({ setShowAuth }) {
       if (response.data.success) {
         setToken(response.data.token);
         localStorage.setItem("token", response.data.token);
-        setShowAuth(false);
+        setShowLogin(false);
       } else {
         alert(response.data.message);
       }
@@ -41,7 +39,6 @@ function AuthPage({ setShowAuth }) {
     }
   };
 
-  // Disable background scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -51,27 +48,29 @@ function AuthPage({ setShowAuth }) {
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/40 z-50 flex justify-end"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-end"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={() => setShowAuth(false)}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      onClick={() => setShowLogin(false)}
     >
-      {/* Sliding Panel */}
       <motion.div
         className="w-full sm:max-w-md h-full bg-white shadow-xl p-8 overflow-y-auto"
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 90, damping: 20 }}
+        initial={{ x: "100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 120,
+          damping: 18,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Title */}
         <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
           {isSignup ? "New User Registration" : "Welcome Back"}
         </h2>
 
-        {/* Form */}
         <form onSubmit={onSubmitHandler} className="space-y-4">
           {isSignup && (
             <input
@@ -112,7 +111,6 @@ function AuthPage({ setShowAuth }) {
           </button>
         </form>
 
-        {/* Toggle */}
         <p className="text-center text-sm text-gray-500 mt-6">
           {isSignup ? "Already registered?" : "New user?"}
           <span

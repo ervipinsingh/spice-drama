@@ -5,13 +5,32 @@ export const StoreContext = createContext(null);
 
 const StoreContextProvider = ({ children }) => {
   /* ================= STATES ================= */
-  const [cartItems, setCartItems] = useState({});
+
+  const [cartItems, setCartItems] = useState(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    return savedCart ? JSON.parse(savedCart) : {};
+  });
+
   const [food_list, setFoodList] = useState([]);
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState(() => {
+    return localStorage.getItem("token") || "";
+  });
+
+  const [showLogin, setShowLogin] = useState(false);
+
+  /* ✅ COUPON STATES */
+  const [discount, setDiscount] = useState(() => {
+    return Number(localStorage.getItem("discount")) || 0;
+  });
+
+  const [appliedCoupon, setAppliedCoupon] = useState(() => {
+    return localStorage.getItem("appliedCoupon") || "";
+  });
 
   const hasInitialized = useRef(false);
 
   /* ================= BASE URL ================= */
+
   const rawUrl = import.meta.env.VITE_USER_API || "";
   const url = (() => {
     let base = String(rawUrl).trim().replace(/\/+$/, "");
@@ -21,7 +40,20 @@ const StoreContextProvider = ({ children }) => {
     return base;
   })();
 
+  /* ================= SAVE CART TO LOCAL STORAGE ================= */
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  /* ✅ SAVE COUPON TO LOCAL STORAGE */
+  useEffect(() => {
+    localStorage.setItem("discount", discount);
+    localStorage.setItem("appliedCoupon", appliedCoupon);
+  }, [discount, appliedCoupon]);
+
   /* ================= IMAGE URL HELPER ================= */
+
   const getImageUrl = (image) => {
     if (!image) return "";
     if (/^https?:\/\//i.test(image)) {
@@ -33,13 +65,17 @@ const StoreContextProvider = ({ children }) => {
   /* ================= CART ACTIONS ================= */
 
   const AddToCart = async (itemId) => {
+    const savedToken = localStorage.getItem("token");
+
+    if (!savedToken) {
+      setShowLogin(true);
+      return;
+    }
+
     setCartItems((prev) => ({
       ...prev,
       [itemId]: (prev[itemId] || 0) + 1,
     }));
-
-    const savedToken = localStorage.getItem("token");
-    if (!savedToken) return;
 
     try {
       await axios.post(
@@ -79,7 +115,8 @@ const StoreContextProvider = ({ children }) => {
     }
   };
 
-  /* ================= TOTAL AMOUNT ================= */
+  /* ================= TOTAL CALCULATIONS ================= */
+
   const getTotalCartAmount = () => {
     let total = 0;
     for (const itemId in cartItems) {
@@ -89,6 +126,52 @@ const StoreContextProvider = ({ children }) => {
     }
     return total;
   };
+
+  const getFinalAmount = () => {
+    const subtotal = getTotalCartAmount();
+    const delivery = subtotal > 0 ? 40 : 0;
+    const total = subtotal + delivery - discount;
+    return total > 0 ? total : 0;
+  };
+
+  /* ================= APPLY COUPON ================= */
+
+  const applyCoupon = async (code) => {
+    if (!code) return { success: false, message: "Enter promo code" };
+
+    try {
+      const response = await axios.post(`${url}/api/promo/apply`, {
+        code,
+        cartTotal: getTotalCartAmount() + 40,
+      });
+
+      if (response.data.success) {
+        setDiscount(response.data.discount);
+        setAppliedCoupon(code);
+        return { success: true };
+      } else {
+        setDiscount(0);
+        setAppliedCoupon("");
+        return { success: false, message: response.data.message };
+      }
+    } catch (error) {
+      return { success: false, message: "Error applying coupon" };
+    }
+  };
+
+  const removeCoupon = () => {
+    setDiscount(0);
+    setAppliedCoupon("");
+  };
+
+  useEffect(() => {
+    if (Object.keys(cartItems).length === 0) {
+      setDiscount(0);
+      setAppliedCoupon("");
+      localStorage.removeItem("discount");
+      localStorage.removeItem("appliedCoupon");
+    }
+  }, [cartItems]);
 
   /* ================= API CALLS ================= */
 
@@ -110,27 +193,26 @@ const StoreContextProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${savedToken}` },
       });
 
-      if (res.data?.success) {
-        setCartItems(res.data.cartData || {});
+      if (res.data?.success && res.data.cartData) {
+        const serverCart = res.data.cartData;
+
+        if (Object.keys(serverCart).length > 0) {
+          setCartItems(serverCart);
+          localStorage.setItem("cartItems", JSON.stringify(serverCart));
+        }
       }
     } catch (err) {
       if (err.response?.status !== 401) {
         console.error("Cart load failed:", err);
       }
-      setCartItems({});
     }
   };
 
   /* ================= INITIAL LOAD ================= */
-  useEffect(() => {
-    // PREVENT DOUBLE INITIALIZATION IN REACT STRICT MODE
-    if (hasInitialized.current) {
-      console.log("⚠️ Already initialized, skipping...");
-      return;
-    }
 
+  useEffect(() => {
+    if (hasInitialized.current) return;
     hasInitialized.current = true;
-    console.log("🚀 Initializing StoreContext...");
 
     const init = async () => {
       await fetchFoodList();
@@ -139,15 +221,16 @@ const StoreContextProvider = ({ children }) => {
       if (savedToken) {
         setToken(savedToken);
         await loadCartData(savedToken);
-      } else {
-        setCartItems({});
       }
     };
 
     init();
   }, []);
 
+  /* ================= CLEAR DATA ON LOGOUT ================= */
+
   /* ================= CONTEXT VALUE ================= */
+
   const contextValue = {
     food_list,
     setFoodList,
@@ -156,10 +239,17 @@ const StoreContextProvider = ({ children }) => {
     AddToCart,
     removeCart,
     getTotalCartAmount,
+    getFinalAmount,
+    applyCoupon,
+    removeCoupon,
+    discount,
+    appliedCoupon,
     url,
     getImageUrl,
     token,
     setToken,
+    showLogin,
+    setShowLogin,
   };
 
   return (

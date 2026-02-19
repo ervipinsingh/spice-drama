@@ -28,7 +28,7 @@ const Menu = () => {
       <h1 className="text-3xl font-semibold text-center mb-6">Our Full Menu</h1>
 
       {/* Category Filter */}
-      <div className="flex gap-4 justify-center mb-8 flex-wrap">
+      <div className="flex gap-4 justify-center mb-8 flex-wrap cursor-pointer">
         {[
           "All",
           "Pizza",

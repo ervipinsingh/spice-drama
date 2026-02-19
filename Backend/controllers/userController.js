@@ -3,14 +3,16 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 
-// create token
+/* ================= CREATE TOKEN ================= */
+
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
 
-// LOGIN USER
+/* ================= LOGIN USER ================= */
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -32,7 +34,11 @@ const loginUser = async (req, res) => {
     }
 
     const token = createToken(user._id);
-    res.json({ success: true, token });
+
+    res.json({
+      success: true,
+      token,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -42,7 +48,8 @@ const loginUser = async (req, res) => {
   }
 };
 
-// REGISTER USER
+/* ================= REGISTER USER ================= */
+
 const registerUser = async (req, res) => {
   const { name, password, email } = req.body;
 
@@ -81,7 +88,10 @@ const registerUser = async (req, res) => {
     const user = await newUser.save();
     const token = createToken(user._id);
 
-    res.json({ success: true, token });
+    res.json({
+      success: true,
+      token,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -91,4 +101,73 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser };
+/* ================= SAVE ADDRESS ================= */
+
+const saveAddress = async (req, res) => {
+  try {
+    const userId = req.userId; // from auth middleware
+    const newAddress = req.body;
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prevent duplicate same address
+    const exists = user.addresses.some(
+      (addr) =>
+        addr.street === newAddress.street &&
+        addr.zip_code === newAddress.zip_code &&
+        addr.phone === newAddress.phone,
+    );
+
+    if (!exists) {
+      user.addresses.push(newAddress);
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: "Address saved successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error saving address",
+    });
+  }
+};
+
+/* ================= GET USER ADDRESSES ================= */
+
+const getUserAddresses = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.json({
+        success: false,
+      });
+    }
+
+    res.json({
+      success: true,
+      addresses: user.addresses || [],
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching addresses",
+    });
+  }
+};
+
+export { loginUser, registerUser, saveAddress, getUserAddresses };

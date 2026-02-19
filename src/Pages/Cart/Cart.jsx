@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import axios from "axios";
 
 import { StoreContext } from "../../Components/Context/StoreContext";
@@ -20,12 +20,15 @@ const Cart = () => {
     AddToCart,
     removeCart,
     getTotalCartAmount,
+    getFinalAmount,
+    applyCoupon,
+    discount,
+    appliedCoupon,
     url,
   } = useContext(StoreContext);
 
   const [promoCode, setPromoCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [finalAmount, setFinalAmount] = useState(0);
+  const [promoList, setPromoList] = useState([]);
 
   const navigate = useNavigate();
 
@@ -71,19 +74,25 @@ const Cart = () => {
   };
 
   // promo code state and handler
-  const applyPromoCode = async () => {
-    const response = await axios.post(url + "/api/promo/apply", {
-      code: promoCode,
-      cartTotal: subtotal + deliveryFee,
-    });
 
-    if (response.data.success) {
-      setDiscount(response.data.discount);
-      setFinalAmount(response.data.finalAmount);
-    } else {
-      alert(response.data.message);
+  const fetchPromos = async () => {
+    try {
+      const res = await axios.get(url + "/api/promo/list");
+      if (res.data.success) {
+        // only active & not expired promos
+        const validPromos = res.data.promos.filter(
+          (p) => p.isActive && new Date(p.expiryDate) > new Date(),
+        );
+        setPromoList(validPromos);
+      }
+    } catch (err) {
+      console.error("Error fetching promos:", err);
     }
   };
+
+  useEffect(() => {
+    fetchPromos();
+  }, []);
 
   const stockIssues = getStockIssues();
   const hasStockIssues = stockIssues.length > 0;
@@ -360,8 +369,7 @@ const Cart = () => {
                         Total
                       </span>
                       <span className="text-base font-semibold text-gray-900">
-                        ₹
-                        {finalAmount > 0 ? finalAmount : subtotal + deliveryFee}
+                        ₹{getFinalAmount()}
                       </span>
                     </div>
                   </div>
@@ -370,7 +378,14 @@ const Cart = () => {
                 {/* CHECKOUT BUTTON WITH STOCK VALIDATION */}
                 <button
                   disabled={subtotal === 0 || hasStockIssues}
-                  onClick={() => navigate("/order")}
+                  onClick={() =>
+                    navigate("/order", {
+                      state: {
+                        discount,
+                        totalAmount: getFinalAmount(),
+                      },
+                    })
+                  }
                   className={`w-full flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md text-white duration-300 transition-colors ${
                     subtotal === 0 || hasStockIssues
                       ? "bg-gray-300 cursor-not-allowed"
@@ -398,29 +413,76 @@ const Cart = () => {
                 )}
               </div>
 
-              {/* Promo Code */}
-              <div className="border-t border-gray-200 p-6">
+              {/* PROMO SECTION */}
+              <div className="border-t p-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <Tag size={16} className="text-gray-500" />
-                  <label className="text-sm font-medium text-gray-700">
-                    Promo Code
-                  </label>
+                  <Tag size={16} />
+                  <label className="text-sm font-medium">Coupons</label>
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter Promo Code"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  />
-                  <button
-                    onClick={applyPromoCode}
-                    className="cursor-pointer px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-md hover:bg-gray-800 transition-colors"
-                  >
-                    Apply
-                  </button>
-                </div>
+
+                {/* IF COUPON APPLIED */}
+                {appliedCoupon ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                      <p className="text-green-700 font-semibold">
+                        Coupon "{appliedCoupon}" applied 🎉
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        You saved ₹{discount}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem("discount");
+                        localStorage.removeItem("appliedCoupon");
+                        window.location.reload(); // or better: use removeCoupon()
+                      }}
+                      className="cursor-pointer text-xs px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {promoList.length > 0 && (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium">
+                          Available Coupons:
+                        </p>
+
+                        {promoList.map((promo) => (
+                          <div
+                            key={promo._id}
+                            className="border border-orange-200 bg-orange-50 rounded-lg p-3 flex justify-between items-center"
+                          >
+                            <div>
+                              <p className="font-semibold text-orange-600">
+                                {promo.code}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                {promo.discountType === "percentage"
+                                  ? `${promo.discountValue}% OFF`
+                                  : `₹${promo.discountValue} OFF`}{" "}
+                                | Min ₹{promo.minOrderAmount}
+                              </p>
+                            </div>
+
+                            <button
+                              onClick={async () => {
+                                const result = await applyCoupon(promo.code);
+                                if (!result.success) alert(result.message);
+                              }}
+                              className="cursor-pointer text-xs px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>

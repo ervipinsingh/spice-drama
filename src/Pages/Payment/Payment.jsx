@@ -11,79 +11,54 @@ export default function PaymentPage() {
   const hasSubmittedRef = useRef(false);
 
   const {
-    getTotalCartAmount,
     cartItems,
     food_list,
     url,
     token,
     setCartItems,
+    removeCoupon,
     setFoodList,
+    discount,
+    getFinalAmount,
   } = useContext(StoreContext);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // GET ADDRESS DATA FROM PlaceOrder PAGE
-  const deliveryInfo = location.state?.deliveryInfo || {
-    first_name: "",
-    last_name: "",
-    street: "Default Street",
-    city: "Default City",
-    state: "Default State",
-    zip_code: "000000",
-    phone: "",
-  };
+  /* ================= GET DATA FROM PLACEORDER ================= */
 
-  // REFRESH FOOD LIST AFTER ORDER
+  const deliveryInfo = location.state?.deliveryInfo || {};
+  const finalAmount = getFinalAmount();
+
+  /* ================= REFRESH FOOD ================= */
+
   const refreshFoodList = async () => {
     try {
-      console.log("🔄 Refreshing food list...");
       const res = await axios.get(`${url}/api/food/list`);
       if (res.data?.success) {
         setFoodList(res.data.data || []);
-        console.log("Food list refreshed with updated stock");
       }
     } catch (err) {
       console.error("Failed to refresh food list:", err);
     }
   };
 
+  /* ================= PLACE ORDER ================= */
+
   const handleCODConfirm = async () => {
-    console.log("=== ORDER BUTTON CLICKED ===");
+    if (hasSubmittedRef.current || processing || orderComplete) return;
 
-    // TRIPLE PROTECTION
-    if (hasSubmittedRef.current) {
-      console.log("🚫 Already submitted (ref flag)");
-      return;
-    }
-
-    if (processing) {
-      console.log("🚫 Already processing");
-      return;
-    }
-
-    if (orderComplete) {
-      console.log("🚫 Order already complete");
-      return;
-    }
-
-    // LOCK IMMEDIATELY
     hasSubmittedRef.current = true;
     setProcessing(true);
 
-    console.log("🔒 Locked - proceeding with order");
-
     try {
-      // VALIDATE FOOD LIST
       if (!food_list || food_list.length === 0) {
-        console.log("❌ Food list not loaded");
         toast.error("Loading menu... Please try again");
         setProcessing(false);
         hasSubmittedRef.current = false;
         return;
       }
 
-      // BUILD ORDER ITEMS
       const orderItems = [];
 
       for (const itemId in cartItems) {
@@ -96,100 +71,62 @@ export default function PaymentPage() {
               name: itemInfo.name,
               price: itemInfo.price,
               image: itemInfo.image,
-              quantity: quantity,
+              quantity,
             });
           }
         }
       }
 
       if (orderItems.length === 0) {
-        console.log("❌ No items in cart");
         toast.error("Your cart is empty");
         setProcessing(false);
         hasSubmittedRef.current = false;
         return;
       }
 
-      console.log("📦 Order Items:", orderItems);
-
-      // PREPARE ORDER WITH ACTUAL ADDRESS
       const orderData = {
         items: orderItems,
-        amount: getTotalCartAmount() + 40,
+        amount: finalAmount, // ✅ CORRECT COUPON TOTAL
+        discount,
         address: deliveryInfo,
       };
 
-      console.log("📤 Sending order to backend...");
-      console.log("Address:", deliveryInfo);
-
-      // PLACE ORDER
       const response = await axios.post(`${url}/api/order/place`, orderData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("📥 Backend response:", response.data);
-
-      // HANDLE RESPONSE
       if (response.data.success) {
-        console.log("✅ Order successful!");
-
-        if (response.data.isDuplicate) {
-          console.log("⚠️ Duplicate detected by backend");
-        }
-
-        // CLEAR CART
         setCartItems({});
-
-        // REFRESH FOOD LIST TO GET UPDATED STOCK
+        removeCoupon();
         await refreshFoodList();
-
-        // SHOW SUCCESS
         toast.success("Order placed successfully!");
-
-        // MARK COMPLETE
         setOrderComplete(true);
       } else {
-        console.log("❌ Order failed:", response.data.message);
         toast.error(response.data.message || "Order failed");
         setProcessing(false);
         hasSubmittedRef.current = false;
       }
     } catch (error) {
-      console.error("❌ Order Error:", error);
-
-      // HANDLE RATE LIMIT (429)
-      if (error.response?.status === 429) {
-        const msg =
-          error.response.data.message ||
-          "Please wait before placing another order";
-        toast.warning(msg);
-        console.log("⏳ Rate limited:", msg);
-      } else {
-        const errorMsg =
-          error.response?.data?.message || "Failed to place order";
-        toast.error(errorMsg);
-      }
-
+      const errorMsg = error.response?.data?.message || "Failed to place order";
+      toast.error(errorMsg);
       setProcessing(false);
       hasSubmittedRef.current = false;
     }
   };
 
-  // REDIRECT ON SUCCESS
+  /* ================= REDIRECT ================= */
+
   useEffect(() => {
     if (orderComplete) {
-      console.log("Redirecting to orders in 2.5s...");
-
       const timer = setTimeout(() => {
-        console.log("➡️ Navigating now");
         navigate("/myorders");
       }, 2500);
-
       return () => clearTimeout(timer);
     }
   }, [orderComplete, navigate]);
 
-  /* ---------------- SUCCESS SCREEN ---------------- */
+  /* ================= SUCCESS SCREEN ================= */
+
   if (orderComplete) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
@@ -214,7 +151,8 @@ export default function PaymentPage() {
     );
   }
 
-  /* ---------------- CHECKOUT PAGE ---------------- */
+  /* ================= CHECKOUT PAGE ================= */
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 py-12 px-4">
       <div className="max-w-4xl mx-auto">
@@ -223,7 +161,6 @@ export default function PaymentPage() {
         </h1>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* COD INFO */}
           <div className="md:col-span-2">
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <div className="flex items-center gap-2 mb-4">
@@ -239,25 +176,20 @@ export default function PaymentPage() {
                 </p>
                 <p className="text-sm text-gray-700">
                   Please keep exact change ready. Our delivery partner will
-                  collect <b>₹{getTotalCartAmount() + 40}</b> at your doorstep.
+                  collect <b>₹{finalAmount}</b> at your doorstep.
                 </p>
               </div>
 
               <button
                 onClick={handleCODConfirm}
-                disabled={
-                  processing ||
-                  getTotalCartAmount() <= 0 ||
-                  orderComplete ||
-                  hasSubmittedRef.current
-                }
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-lg font-semibold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={processing || finalAmount <= 0 || orderComplete}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-lg font-semibold text-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {processing
                   ? "Placing Order..."
-                  : getTotalCartAmount() <= 0
+                  : finalAmount <= 0
                     ? "Add items to place order"
-                    : `Place Order (₹${getTotalCartAmount() + 40})`}
+                    : `Place Order (₹${finalAmount})`}
               </button>
             </div>
           </div>
@@ -271,20 +203,15 @@ export default function PaymentPage() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>₹{getTotalCartAmount()}</span>
+                  <span>Discount</span>
+                  <span className="text-green-600">-₹{discount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee</span>
-                  <span>₹{getTotalCartAmount() === 0 ? 0 : 40}</span>
-                </div>
+
                 <hr />
+
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-orange-600">
-                    ₹
-                    {getTotalCartAmount() === 0 ? 0 : getTotalCartAmount() + 40}
-                  </span>
+                  <span className="text-orange-600">₹{finalAmount}</span>
                 </div>
               </div>
             </div>

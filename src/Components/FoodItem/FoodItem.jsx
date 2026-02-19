@@ -43,7 +43,10 @@ const FoodItem = ({ id, name, description, price, image }) => {
             {/* Add / Counter Buttons */}
             {!cartItems[id] ? (
               <img
-                onClick={() => !isOutOfStock && AddToCart(id)}
+                onClick={() => {
+                  if (isOutOfStock) return;
+                  AddToCart(id);
+                }}
                 src={assets.add_icon}
                 alt=""
                 className={`absolute bottom-2 right-2 bg-white border-0 p-2 rounded-full 

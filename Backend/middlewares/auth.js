@@ -1,11 +1,13 @@
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-/* ================= AUTH ================= */
+/* ================= AUTH MIDDLEWARE ================= */
+
 const authMiddleware = async (req, res, next) => {
   try {
     let token;
 
+    // ✅ Extract token from header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
@@ -20,8 +22,10 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // ✅ Fetch user (exclude password)
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -31,9 +35,14 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
+    // ✅ Attach user object + userId separately (very useful)
     req.user = user;
+    req.userId = user._id;
+
     next();
   } catch (error) {
+    console.log("Auth Error:", error.message);
+
     return res.status(401).json({
       success: false,
       message: "Invalid or expired token",
@@ -42,6 +51,7 @@ const authMiddleware = async (req, res, next) => {
 };
 
 /* ================= ROLE CHECK ================= */
+
 const hasRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

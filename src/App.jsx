@@ -1,4 +1,8 @@
 import { Route, Routes, useLocation } from "react-router-dom";
+import { useContext } from "react";
+import { StoreContext } from "./Components/Context/StoreContext";
+import AuthPage from "./Components/Authentication/AuthPage";
+
 import MainLayout from "./Layout/Mainlayout";
 import AuthLayout from "./Layout/Authlayout";
 import Home from "./Pages/Home/Home";
@@ -16,11 +20,13 @@ import { AnimatePresence, motion } from "framer-motion";
 
 function App() {
   const location = useLocation();
+  const { showLogin } = useContext(StoreContext);
 
   return (
     <>
       <ScrollToTop />
 
+      {/* Page Transition Animation */}
       <AnimatePresence mode="wait">
         <motion.div
           key={location.pathname}
@@ -47,6 +53,9 @@ function App() {
           </Routes>
         </motion.div>
       </AnimatePresence>
+
+      {/* Login Popup */}
+      <AnimatePresence>{showLogin && <AuthPage />}</AnimatePresence>
     </>
   );
 }
