@@ -7,7 +7,7 @@ const authMiddleware = async (req, res, next) => {
   try {
     let token;
 
-    // ✅ Extract token from header
+    // Extract token from header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
@@ -22,10 +22,10 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ Verify token
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // ✅ Fetch user (exclude password)
+    // Fetch user (exclude password)
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
@@ -35,7 +35,7 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // ✅ Attach user object + userId separately (very useful)
+    // Attach user object + userId separately (very useful)
     req.user = user;
     req.userId = user._id;
 

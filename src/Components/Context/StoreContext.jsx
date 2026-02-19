@@ -18,7 +18,7 @@ const StoreContextProvider = ({ children }) => {
 
   const [showLogin, setShowLogin] = useState(false);
 
-  /* ✅ COUPON STATES */
+  /* COUPON STATES */
   const [discount, setDiscount] = useState(() => {
     return Number(localStorage.getItem("discount")) || 0;
   });
@@ -46,7 +46,7 @@ const StoreContextProvider = ({ children }) => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  /* ✅ SAVE COUPON TO LOCAL STORAGE */
+  /* SAVE COUPON TO LOCAL STORAGE */
   useEffect(() => {
     localStorage.setItem("discount", discount);
     localStorage.setItem("appliedCoupon", appliedCoupon);
@@ -226,8 +226,6 @@ const StoreContextProvider = ({ children }) => {
 
     init();
   }, []);
-
-  /* ================= CLEAR DATA ON LOGOUT ================= */
 
   /* ================= CONTEXT VALUE ================= */
 

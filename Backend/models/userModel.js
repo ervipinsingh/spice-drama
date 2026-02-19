@@ -1,18 +1,16 @@
 import mongoose from "mongoose";
 
-const addressSchema = new mongoose.Schema(
-  {
-    first_name: { type: String, required: true },
-    last_name: { type: String, required: true },
-    email: { type: String },
-    street: { type: String, required: true },
-    landmark: { type: String },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zip_code: { type: String, required: true },
-    phone: { type: String, required: true },
-  }
-);
+const addressSchema = new mongoose.Schema({
+  first_name: { type: String, required: true },
+  last_name: { type: String, required: true },
+  email: { type: String },
+  street: { type: String, required: true },
+  landmark: { type: String },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  zip_code: { type: String, required: true },
+  phone: { type: String, required: true },
+});
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,13 +33,11 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // cart structure: { foodId: quantity }
     cartData: {
       type: Object,
       default: {},
     },
 
-    // ✅ NEW FIELD
     addresses: {
       type: [addressSchema],
       default: [],

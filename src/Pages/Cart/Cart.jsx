@@ -27,7 +27,6 @@ const Cart = () => {
     url,
   } = useContext(StoreContext);
 
-  const [promoCode, setPromoCode] = useState("");
   const [promoList, setPromoList] = useState([]);
 
   const navigate = useNavigate();

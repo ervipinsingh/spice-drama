@@ -6,7 +6,7 @@ import {
   getUserAddresses,
 } from "../controllers/userController.js";
 
-import authMiddleware from "../middleware/authMiddleware.js";
+import authMiddleware from "../middlewares/auth.js";
 
 const userRouter = express.Router();
 

@@ -105,7 +105,7 @@ const registerUser = async (req, res) => {
 
 const saveAddress = async (req, res) => {
   try {
-    const userId = req.userId; // from auth middleware
+    const userId = req.userId; 
     const newAddress = req.body;
 
     const user = await userModel.findById(userId);

@@ -86,7 +86,7 @@ export default function PaymentPage() {
 
       const orderData = {
         items: orderItems,
-        amount: finalAmount, // ✅ CORRECT COUPON TOTAL
+        amount: finalAmount,
         discount,
         address: deliveryInfo,
       };
