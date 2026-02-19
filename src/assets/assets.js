@@ -21,6 +21,7 @@ import menu_13 from "./maggie.webp";
 import menu_14 from "./snacks.png";
 import menu_15 from "./Desserts.png";
 import menu_16 from "./Beverages.webp";
+import menu_17 from "./others.png";
 
 import add_icon_white from "./add_icon_white.png";
 import add_icon_green from "./add_icon_green.png";
@@ -121,6 +122,10 @@ export const menu_list = [
   {
     menu_name: "Beverages",
     menu_image: menu_16,
+  },
+  {
+    menu_name: "Others",
+    menu_image: menu_17,
   },
 ];
 
