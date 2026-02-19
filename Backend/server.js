@@ -27,7 +27,7 @@ app.use(
 /* ================= DATABASE ================= */
 connectDB();
 
-/* ================= ROUTES ================= */
+/* ================= ROUTES ================= */ 
 app.use("/api/food", foodRouter);
 app.use("/api/user", userRouter);
 app.use("/api/cart", cartRouter);
