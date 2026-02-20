@@ -13,7 +13,10 @@ function Navbar() {
 
   const { token, setToken, cartItems, setShowLogin } = useContext(StoreContext);
 
-  const hasItemsInCart = Object.keys(cartItems).length > 0;
+  const totalCartItems = Object.values(cartItems || {}).reduce(
+    (total, qty) => total + qty,
+    0,
+  );
 
   const navigate = useNavigate();
 
@@ -23,6 +26,10 @@ function Navbar() {
     setProfileOpen(false);
     navigate("/");
   };
+
+  useEffect(() => {
+    console.log("Navbar cart:", cartItems);
+  }, [cartItems]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -92,9 +99,20 @@ function Navbar() {
 
           {/* Right */}
           <div className="hidden md:flex items-center gap-6">
-            {token && hasItemsInCart && (
-              <Link to="/cart">
+            {token && totalCartItems > 0 && (
+              <Link to="/cart" className="relative">
                 <FaShoppingCart className="text-xl text-gray-600 hover:text-orange-500 transition" />
+
+                {/* Badge */}
+                <motion.span
+                  key={totalCartItems}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1.2 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                  className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full"
+                >
+                  {totalCartItems}
+                </motion.span>
               </Link>
             )}
 
@@ -198,9 +216,16 @@ function Navbar() {
                 Services
               </Link>
 
-              {token && hasItemsInCart && (
-                <Link to="/cart" onClick={() => setMenuOpen(false)}>
+              {token && totalCartItems > 0 && (
+                <Link
+                  to="/cart"
+                  onClick={() => setMenuOpen(false)}
+                  className="relative"
+                >
                   Cart
+                  <span className="ml-2 bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {totalCartItems}
+                  </span>
                 </Link>
               )}
 
