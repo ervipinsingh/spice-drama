@@ -3,7 +3,7 @@ import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 
 function Contact() {
   const openWhatsApp = () => {
-    const phoneNumber = "9716159710";
+    const phoneNumber = "8929550339";
     const message = "Hello! I want to order food";
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -42,7 +42,7 @@ function Contact() {
                 icon: <Phone className="w-6 h-6 text-white" />,
                 title: "Call Us",
                 text: "Mon-Sun, 12 PM - 10 PM",
-                value: "+91 9716159710",
+                value: "+91 8929550339",
               },
               {
                 icon: <Mail className="w-6 h-6 text-white" />,
