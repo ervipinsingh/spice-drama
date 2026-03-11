@@ -3,8 +3,8 @@ const nodemailer = require("nodemailer");
 const sendMail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false, // true if 465
+    port: Number(process.env.SMTP_PORT), // convert to number
+    secure: true, // true for port 465
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -18,7 +18,12 @@ const sendMail = async (options) => {
     html: options.message,
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("📧 Email sent successfully");
+  } catch (error) {
+    console.error("❌ Email error:", error);
+  }
 };
 
 module.exports = sendMail;
