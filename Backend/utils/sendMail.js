@@ -22,7 +22,7 @@ const sendMail = async (options) => {
   }
 
   const mailOptions = {
-    from: `"Spice Drama" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_USER,
     to: options.email,
     subject: options.subject,
     html: options.message,
