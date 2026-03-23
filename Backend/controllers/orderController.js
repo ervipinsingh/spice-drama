@@ -91,6 +91,12 @@ const placeOrder = async (req, res) => {
     await newOrder.save();
     console.log("Order created:", newOrder._id);
 
+    await sendMail({
+    email: "atuldhakhaiya@gmail.com",
+    subject: "Test Mail",
+    message: "<h1>SMTP Working ✅</h1>",
+    });
+
     // ================= CLEAR CART =================
     await userModel.findByIdAndUpdate(userId, {
       cartData: {},
@@ -161,13 +167,13 @@ const placeOrder = async (req, res) => {
 
     // ================= SEND MAILS =================
     try {
-      await sendMail({
+      sendMail({
         email: user.email,
         subject: "Your Order is Confirmed - Spice Drama 🍽️",
         message: customerTemplate,
       });
 
-      await sendMail({
+      sendMail({
         email: process.env.ADMIN_EMAIL,
         subject: "New Order Received - Spice Drama",
         message: adminTemplate,
