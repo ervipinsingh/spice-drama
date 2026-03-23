@@ -91,7 +91,7 @@ const placeOrder = async (req, res) => {
     await newOrder.save();
     console.log("Order created:", newOrder._id);
 
-    await sendMail({
+    sendMail({
     email: "atuldhakhaiya@gmail.com",
     subject: "Test Mail",
     message: "<h1>SMTP Working ✅</h1>",
