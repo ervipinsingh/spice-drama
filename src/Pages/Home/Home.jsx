@@ -12,7 +12,6 @@ const Home = () => {
 
   return (
     <>
-      <OfferPopup />
       <Header />
       <Exploremenu Category={Category} SetCategory={SetCategory} />
       <FoodDisplay category={Category} />

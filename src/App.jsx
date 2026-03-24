@@ -2,7 +2,6 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { StoreContext } from "./Components/Context/StoreContext";
 import AuthPage from "./Components/Authentication/AuthPage";
-
 import MainLayout from "./Layout/Mainlayout";
 import AuthLayout from "./Layout/Authlayout";
 import OfferPopup from "./Components/OfferPopup/OfferPopup";
