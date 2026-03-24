@@ -32,7 +32,7 @@ export default function PlaceOrder() {
 
   const { discount, getFinalAmount } = useContext(StoreContext);
   const subtotal = getTotalCartAmount();
-  const deliveryFee = subtotal > 0 ? 40 : 0;
+  const deliveryFee = subtotal > 0 && subtotal < 200 ? 40 : 0;
   const finalTotal = getFinalAmount();
 
   /* ================= FETCH SAVED ADDRESSES ================= */

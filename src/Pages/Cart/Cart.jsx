@@ -32,7 +32,7 @@ const Cart = () => {
   const navigate = useNavigate();
 
   const subtotal = getTotalCartAmount();
-  const deliveryFee = subtotal > 0 ? 40 : 0;
+  const deliveryFee = subtotal > 0 && subtotal < 200 ? 40 : 0;
   const itemCount = Object.values(cartItems).reduce((sum, qty) => sum + qty, 0);
 
   const handleDeleteItem = (itemId) => {

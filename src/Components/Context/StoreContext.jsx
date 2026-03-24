@@ -129,7 +129,7 @@ const StoreContextProvider = ({ children }) => {
 
   const getFinalAmount = () => {
     const subtotal = getTotalCartAmount();
-    const delivery = subtotal > 0 ? 40 : 0;
+    const delivery = subtotal > 0 && subtotal < 200 ? 40 : 0;
     const total = subtotal + delivery - discount;
     return total > 0 ? total : 0;
   };
