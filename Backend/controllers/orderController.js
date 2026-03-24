@@ -89,9 +89,6 @@ const placeOrder = async (req, res) => {
     // CLEAR CART
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    // 🔥 GET USER EMAIL
-    const user = await userModel.findById(userId);
-
     // 🔥 SEND EMAIL (USER)
     await sendMail({
       email: user.email,
