@@ -11,7 +11,6 @@ const placeOrder = async (req, res) => {
 
     console.log("📦 Received order request from user:", userId);
 
-    // ================= IDEMPOTENCY CHECK =================
     const tenSecondsAgo = new Date(Date.now() - 10000);
     const recentOrder = await orderModel.findOne({
       userId,
@@ -23,11 +22,8 @@ const placeOrder = async (req, res) => {
       const recentItemIds = recentOrder.items.map((i) => i._id).sort();
       const currentItemIds = items.map((i) => i._id).sort();
 
-      const isSameOrder =
-        JSON.stringify(recentItemIds) === JSON.stringify(currentItemIds);
-
-      if (isSameOrder) {
-        console.log("⚠️ DUPLICATE ORDER DETECTED - Returning existing order");
+      if (JSON.stringify(recentItemIds) === JSON.stringify(currentItemIds)) {
+        console.log("⚠️ DUPLICATE ORDER DETECTED");
         return res.json({
           success: true,
           message: "Order already placed",
@@ -37,7 +33,6 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ================= INVENTORY VALIDATION =================
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
@@ -51,7 +46,7 @@ const placeOrder = async (req, res) => {
       if (food.quantity < item.quantity) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for "${food.name}". Available: ${food.quantity}, Requested: ${item.quantity}`,
+          message: `Insufficient stock for "${food.name}"`,
         });
       }
 
@@ -63,7 +58,6 @@ const placeOrder = async (req, res) => {
       }
     }
 
-    // ================= DEDUCT STOCK =================
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
@@ -74,13 +68,13 @@ const placeOrder = async (req, res) => {
       }
 
       await food.save();
-      console.log(`Updated ${food.name}: ${food.quantity} remaining`);
+      console.log(`Updated ${food.name}: ${food.quantity}`);
     }
 
     // ================= CREATE ORDER =================
     const newOrder = new orderModel({
       userId,
-      items: req.body.items,
+      items,
       amount: req.body.amount,
       address: req.body.address,
       paymentMethod: "COD",
@@ -89,11 +83,37 @@ const placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
-    console.log("Order created:", newOrder._id);
 
-    // ================= CLEAR CART =================
-    await userModel.findByIdAndUpdate(userId, {
-      cartData: {},
+    console.log("✅ Order created:", newOrder._id);
+
+    // CLEAR CART
+    await userModel.findByIdAndUpdate(userId, { cartData: {} });
+
+    // 🔥 GET USER EMAIL
+    const user = await userModel.findById(userId);
+
+    // 🔥 SEND EMAIL (USER)
+    await sendMail({
+      email: user.email,
+      subject: "Order Confirmed 🍕 - Spice Drama",
+      message: `
+        <h2>Order Confirmed 🎉</h2>
+        <p>Your order <b>#${newOrder._id}</b> has been placed successfully.</p>
+        <p>Total Amount: ₹${newOrder.amount}</p>
+        <p>Status: Food Processing</p>
+      `,
+    });
+
+    // 🔥 SEND EMAIL (ADMIN)
+    await sendMail({
+      email: "order@spicedrama.com",
+      subject: "New Order Received 🚀",
+      message: `
+        <h2>New Order</h2>
+        <p>Order ID: ${newOrder._id}</p>
+        <p>User: ${user.email}</p>
+        <p>Amount: ₹${newOrder.amount}</p>
+      `,
     });
 
     // ================= FETCH USER DETAILS =================
@@ -186,7 +206,10 @@ const placeOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ PLACE ORDER ERROR:", error);
-    res.status(500).json({ success: false, message: "Order placement failed" });
+    res.status(500).json({
+      success: false,
+      message: "Order placement failed",
+    });
   }
 };
 
@@ -199,7 +222,7 @@ const userOrders = async (req, res) => {
 
     res.json({ success: true, data: orders });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching orders" });
+    res.status(500).json({ success: false });
   }
 };
 
