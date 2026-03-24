@@ -7,10 +7,11 @@ import sendMail from "../utils/sendMail.js";
 const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { items } = req.body;
+    const { items, amount, address } = req.body;
 
     console.log("📦 Received order request from user:", userId);
 
+    // ================= DUPLICATE CHECK =================
     const tenSecondsAgo = new Date(Date.now() - 10000);
     const recentOrder = await orderModel.findOne({
       userId,
@@ -23,7 +24,6 @@ const placeOrder = async (req, res) => {
       const currentItemIds = items.map((i) => i._id).sort();
 
       if (JSON.stringify(recentItemIds) === JSON.stringify(currentItemIds)) {
-        console.log("⚠️ DUPLICATE ORDER DETECTED");
         return res.json({
           success: true,
           message: "Order already placed",
@@ -33,50 +33,47 @@ const placeOrder = async (req, res) => {
       }
     }
 
+    // ================= INVENTORY CHECK =================
     for (const item of items) {
       const food = await foodModel.findById(item._id);
 
       if (!food) {
-        return res.status(400).json({
-          success: false,
-          message: `Item "${item.name}" not found`,
-        });
+        return res
+          .status(400)
+          .json({ success: false, message: "Item not found" });
       }
 
       if (food.quantity < item.quantity) {
         return res.status(400).json({
           success: false,
-          message: `Insufficient stock for "${food.name}"`,
+          message: `Insufficient stock for ${food.name}`,
         });
       }
 
       if (food.isOutOfStock) {
         return res.status(400).json({
           success: false,
-          message: `"${food.name}" is out of stock`,
+          message: `${food.name} is out of stock`,
         });
       }
     }
 
+    // ================= UPDATE STOCK =================
     for (const item of items) {
       const food = await foodModel.findById(item._id);
-
       food.quantity -= item.quantity;
 
-      if (food.quantity === 0) {
-        food.isOutOfStock = true;
-      }
+      if (food.quantity === 0) food.isOutOfStock = true;
 
       await food.save();
-      console.log(`Updated ${food.name}: ${food.quantity}`);
     }
 
     // ================= CREATE ORDER =================
     const newOrder = new orderModel({
       userId,
       items,
-      amount: req.body.amount,
-      address: req.body.address,
+      amount,
+      address,
       paymentMethod: "COD",
       payment: false,
       status: "Food Processing",
@@ -86,115 +83,63 @@ const placeOrder = async (req, res) => {
 
     console.log("✅ Order created:", newOrder._id);
 
-    // CLEAR CART
+    // ================= CLEAR CART =================
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-    // 🔥 SEND EMAIL (USER)
-    await sendMail({
-      email: user.email,
-      subject: "Order Confirmed 🍕 - Spice Drama",
-      message: `
-        <h2>Order Confirmed 🎉</h2>
-        <p>Your order <b>#${newOrder._id}</b> has been placed successfully.</p>
-        <p>Total Amount: ₹${newOrder.amount}</p>
-        <p>Status: Food Processing</p>
-      `,
-    });
-
-    // 🔥 SEND EMAIL (ADMIN)
-    await sendMail({
-      email: "order@spicedrama.com",
-      subject: "New Order Received 🚀",
-      message: `
-        <h2>New Order</h2>
-        <p>Order ID: ${newOrder._id}</p>
-        <p>User: ${user.email}</p>
-        <p>Amount: ₹${newOrder.amount}</p>
-      `,
-    });
-
-    // ================= FETCH USER DETAILS =================
+    // ================= GET USER =================
     const user = await userModel.findById(userId);
 
-    // ================= GENERATE ITEMS HTML =================
+    // ================= HTML =================
     const itemsHTML = items
       .map(
         (item) => `
-        <tr>
-          <td>${item.name}</td>
-          <td>${item.quantity}</td>
-          <td>₹${item.price}</td>
-        </tr>
-      `,
+      <tr>
+        <td>${item.name}</td>
+        <td>${item.quantity}</td>
+        <td>₹${item.price}</td>
+      </tr>
+    `,
       )
       .join("");
 
-    // ================= CUSTOMER EMAIL =================
+    // ================= CUSTOMER MAIL =================
     const customerTemplate = `
-      <h2>🍽️ Spice Drama - Order Confirmed!</h2>
+      <h2>🍽️ Spice Drama - Order Confirmed</h2>
       <p>Hi ${user.name},</p>
-      <p>Your order has been successfully placed.</p>
+      <p>Your order <b>#${newOrder._id}</b> has been placed.</p>
 
-      <p><b>Order ID:</b> ${newOrder._id}</p>
-
-      <table border="1" cellpadding="8" cellspacing="0">
+      <table border="1" cellpadding="8">
         <tr>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Price</th>
+          <th>Item</th><th>Qty</th><th>Price</th>
         </tr>
         ${itemsHTML}
       </table>
 
-      <p><b>Total Amount:</b> ₹${req.body.amount}</p>
-      <p><b>Delivery Address:</b> ${req.body.address}</p>
-      <p><b>Payment Method:</b> COD</p>
-
-      <br/>
-      <p>Thank you for ordering from Spice Drama ❤️</p>
+      <p><b>Total:</b> ₹${amount}</p>
+      <p><b>Address:</b> ${address}</p>
     `;
 
-    // ================= ADMIN EMAIL =================
+    // ================= ADMIN MAIL =================
     const adminTemplate = `
-      <h2>📦 New Order Received</h2>
-
-      <p><b>Order ID:</b> ${newOrder._id}</p>
-      <p><b>Customer:</b> ${user.name}</p>
-      <p><b>Email:</b> ${user.email}</p>
-      <p><b>Address:</b> ${req.body.address}</p>
-
-      <table border="1" cellpadding="8" cellspacing="0">
-        <tr>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Price</th>
-        </tr>
-        ${itemsHTML}
-      </table>
-
-      <p><b>Total:</b> ₹${req.body.amount}</p>
-      <p><b>Payment:</b> COD</p>
+      <h2>📦 New Order</h2>
+      <p><b>ID:</b> ${newOrder._id}</p>
+      <p><b>User:</b> ${user.email}</p>
+      <p><b>Amount:</b> ₹${amount}</p>
+      ${itemsHTML}
     `;
 
-    // ================= SEND MAILS =================
-    try {
-      sendMail({
-        email: user.email,
-        subject: "Your Order is Confirmed - Spice Drama 🍽️",
-        message: customerTemplate,
-      });
+    // ================= SEND MAIL =================
+    await sendMail({
+      email: user.email,
+      subject: "Order Confirmed 🍕",
+      message: customerTemplate,
+    });
 
-      sendMail({
-        email: process.env.ADMIN_EMAIL,
-        subject: "New Order Received - Spice Drama",
-        message: adminTemplate,
-      });
-
-      console.log("📧 Emails sent successfully");
-    } catch (mailError) {
-      console.error("❌ Mail Sending Error:", mailError);
-      // Order fail nahi hoga agar mail fail ho jaye
-    }
+    await sendMail({
+      email: process.env.ADMIN_EMAIL,
+      subject: "New Order 🚀",
+      message: adminTemplate,
+    });
 
     res.json({
       success: true,
