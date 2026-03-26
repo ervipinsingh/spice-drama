@@ -6,8 +6,11 @@ import sendMail from "../utils/sendMail.js";
 /* ================= PLACE ORDER (COD) ================= */
 const placeOrder = async (req, res) => {
   try {
+    const phone = req.body.phone;
     const userId = req.user._id;
     const { items, amount, address } = req.body;
+
+    console.log("📦 req.body:", req.body);
 
     console.log("📦 Received order request from user:", userId);
 
@@ -104,9 +107,65 @@ const placeOrder = async (req, res) => {
 
     // ================= CUSTOMER MAIL =================
     const customerTemplate = `
-      <h2>🍽️ Spice Drama - Order Confirmed</h2>
-      <p>Hi ${user.name},</p>
-      <p>Your order <b>#${newOrder._id}</b> has been placed.</p>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        
+        <h2 style="color:#d35400;">🍽️ Spice Drama - Order Confirmed 🎉</h2>
+        
+        <p>Hi <b>${user.name}</b>,</p>
+        
+        <p>Thank you for choosing <b>Spice Drama</b> ❤️</p>
+        
+        <p>Your order <b>#${newOrder._id}</b> has been successfully placed and is now being prepared.</p>
+
+        <p><b>Email:</b> ${user.email}</p>
+        <p><b>Phone:</b> ${phone}</p>
+        <p><b>Address:</b> ${address}</p>
+
+        <h3 style="margin-top:20px;">🧾 Order Details</h3>
+
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+          <tr style="background-color:#f4f4f4;">
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Price</th>
+          </tr>
+          ${itemsHTML}
+        </table>
+
+        <p style="margin-top:15px;"><b>Total Amount:</b> ₹${amount}</p>
+
+        <hr/>
+
+        <p style="font-size:14px;">
+          🎉 <b>Special Offer:</b> Next time, order directly from our official website 
+          and enjoy <b>exclusive discounts & faster service</b> 💸
+        </p>
+
+        <p style="font-size:14px;">
+          👉 Visit: <a href="https://www.spicedrama.com" target="_blank">www.spicedrama.com</a>
+        </p>
+
+        <p style="margin-top:20px;">
+          Thanks again for your order! 🙌<br/>
+          We’re excited to serve you delicious food 🍕🔥
+        </p>
+
+        <p style="margin-top:10px;">
+          <b>Team Spice Drama</b>
+        </p>
+
+      </div>
+    `;
+
+    // ================= ADMIN MAIL =================
+    const adminTemplate = `
+      <h2>📦 New Order Received 😊👍</h2>
+
+      <p><b>Order ID:</b> ${newOrder._id}</p>
+      <p><b>Customer Name:</b> ${user.name},</p>
+      <p><b>Customer Email:</b> ${user.email}</p>
+      <p><b>Phone:</b> ${phone || "Not provided"}</p>
+      <p><b>Address:</b> ${address}</p>
 
       <table border="1" cellpadding="8">
         <tr>
@@ -116,30 +175,18 @@ const placeOrder = async (req, res) => {
       </table>
 
       <p><b>Total:</b> ₹${amount}</p>
-      <p><b>Phone:</b> ${user.phone}</p>
-      <p><b>Email:</b> ${user.email}</p>
-      <p><b>Address:</b> ${user.address}</p>
-    `;
-
-    // ================= ADMIN MAIL =================
-    const adminTemplate = `
-      <h2>📦 New Order</h2>
-      <p><b>ID:</b> ${newOrder._id}</p>
-      <p><b>User:</b> ${user.email}</p>
-      <p><b>Amount:</b> ₹${amount}</p>
-      ${itemsHTML}
     `;
 
     // ================= SEND MAIL =================
     await sendMail({
       email: user.email,
-      subject: "Order Confirmed 🍕",
+      subject: "Order Placed Successfully 🎉",
       message: customerTemplate,
     });
 
     await sendMail({
       email: process.env.COMPANY_ADMIN_EMAIL,
-      subject: "New Order 🚀",
+      subject: "New Order Received 🎉",
       message: adminTemplate,
     });
 
