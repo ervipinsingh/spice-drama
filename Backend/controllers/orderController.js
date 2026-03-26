@@ -20,8 +20,6 @@ const placeOrder = async (req, res) => {
       ${addr.state} - ${addr.zip_code}
     `;
 
-    console.log("📦 req.body:", req.body);
-
     console.log("📦 Received order request from user:", userId);
 
     // ================= DUPLICATE CHECK =================
