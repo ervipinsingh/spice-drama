@@ -116,7 +116,9 @@ const placeOrder = async (req, res) => {
       </table>
 
       <p><b>Total:</b> ₹${amount}</p>
-      <p><b>Address:</b> ${address}</p>
+      <p><b>Phone:</b> ${user.phone}</p>
+      <p><b>Email:</b> ${user.email}</p>
+      <p><b>Address:</b> ${user.address}</p>
     `;
 
     // ================= ADMIN MAIL =================
