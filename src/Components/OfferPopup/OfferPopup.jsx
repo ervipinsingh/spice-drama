@@ -33,7 +33,7 @@ const OfferPopup = () => {
 
   const handleOrder = () => {
     closePopup();
-    setTimeout(() => navigate("/menu"), 300);
+    setTimeout(() => navigate("/menu?category=Pizza"), 300);
   };
 
   const formatTime = (sec) => {
@@ -55,9 +55,9 @@ const OfferPopup = () => {
         {/* IMAGE with overlay */}
         <div className="relative">
           <img
-            src="offer.jpeg"
+            src="combo 1.png"
             alt="offer"
-            className="w-full h-60 object-cover object-center"
+            className="w-full h-80 object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         </div>
