@@ -103,7 +103,7 @@ const OfferPopup = () => {
 
           {/* Timing */}
           <div className="text-sm text-gray-300 mb-5">
-            ⏰ <b>Timing:</b> 12 PM – 11 PM
+            ⏰ <b>Timing:</b> 1 PM – 11 PM
           </div>
 
           {/* Contact */}

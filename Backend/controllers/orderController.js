@@ -136,7 +136,7 @@ const placeOrder = async (req, res) => {
     });
 
     await sendMail({
-      email: process.env.ADMIN_EMAIL,
+      email: process.env.COMPANY_ADMIN_EMAIL,
       subject: "New Order 🚀",
       message: adminTemplate,
     });
