@@ -6,9 +6,19 @@ import sendMail from "../utils/sendMail.js";
 /* ================= PLACE ORDER (COD) ================= */
 const placeOrder = async (req, res) => {
   try {
-    const phone = req.body.phone;
     const userId = req.user._id;
     const { items, amount, address } = req.body;
+
+    const addr = req.body.address;
+
+    const phone = addr.phone || "Not provided";
+
+    const fullAddress = `
+      ${addr.street}, 
+      ${addr.landmark}, 
+      ${addr.city}, 
+      ${addr.state} - ${addr.zip_code}
+    `;
 
     console.log("📦 req.body:", req.body);
 
@@ -119,7 +129,7 @@ const placeOrder = async (req, res) => {
 
         <p><b>Email:</b> ${user.email}</p>
         <p><b>Phone:</b> ${phone}</p>
-        <p><b>Address:</b> ${address}</p>
+        <p><b>Address:</b> ${fullAddress}</p>
 
         <h3 style="margin-top:20px;">🧾 Order Details</h3>
 
@@ -164,8 +174,8 @@ const placeOrder = async (req, res) => {
       <p><b>Order ID:</b> ${newOrder._id}</p>
       <p><b>Customer Name:</b> ${user.name},</p>
       <p><b>Customer Email:</b> ${user.email}</p>
-      <p><b>Phone:</b> ${phone || "Not provided"}</p>
-      <p><b>Address:</b> ${address}</p>
+      <p><b>Phone:</b> ${phone}</p>
+      <p><b>Address:</b> ${fullAddress}</p>
 
       <table border="1" cellpadding="8">
         <tr>
