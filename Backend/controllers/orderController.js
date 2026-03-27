@@ -101,20 +101,24 @@ const placeOrder = async (req, res) => {
     const user = await userModel.findById(userId);
 
     // ================= HTML =================
-    const itemsHTML = items
-      .map(
-        (item) => `
+    const itemsHTMLArray = await Promise.all(
+      items.map(async (item) => {
+        const food = await foodModel.findById(item._id);
+
+        return `
       <tr>
-         <td>
-          <b>${item.name}</b><br/>
-          <small style="color:gray;">${item.description || ""}</small>
+        <td>
+          <b>${food.name}</b><br/>
+          <small style="color:gray;">${food.description}</small>
         </td>
         <td>${item.quantity}</td>
         <td>₹${item.price}</td>
       </tr>
-    `,
-      )
-      .join("");
+    `;
+      }),
+    );
+
+    const itemsHTML = itemsHTMLArray.join("");
 
     // ================= CUSTOMER MAIL =================
     const customerTemplate = `
