@@ -2,10 +2,21 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import FoodItem from "../../Components/FoodItem/FoodItem";
 import { url } from "../../assets/assets";
+import { useLocation } from "react-router-dom";
 
 const Menu = () => {
   const [foodList, setFoodList] = useState([]);
   const [category, setCategory] = useState("All");
+
+  const location = useLocation();
+
+  useEffect(() => {
+    fetchFoodList();
+
+    if (location.state?.category) {
+      setCategory(location.state.category);
+    }
+  }, []);
 
   // Fetch data from backend
   const fetchFoodList = async () => {

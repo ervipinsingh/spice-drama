@@ -105,7 +105,10 @@ const placeOrder = async (req, res) => {
       .map(
         (item) => `
       <tr>
-        <td>${item.name}</td>
+         <td>
+          <b>${item.name}</b><br/>
+          <small style="color:gray;">${item.description || ""}</small>
+        </td>
         <td>${item.quantity}</td>
         <td>₹${item.price}</td>
       </tr>
