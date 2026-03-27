@@ -34,7 +34,7 @@ const OfferPopup = () => {
   const handleOrder = () => {
     closePopup();
     setTimeout(() => {
-      navigate("/menu", { state: { category: "Pizza" } });
+      navigate("/menu", { state: { category: "Combos" } });
     }, 300);
   };
 
