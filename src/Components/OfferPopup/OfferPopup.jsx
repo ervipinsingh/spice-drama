@@ -65,7 +65,7 @@ const OfferPopup = () => {
         {/* Close */}
         <button
           onClick={closePopup}
-          className="absolute top-4 right-4 bg-white/30 hover:bg-white text-black px-3 py-1 rounded-full"
+          className="absolute top-4 right-4 bg-white/85 hover:bg-white font-bold text-black px-3 py-1 rounded-full"
         >
           ✕
         </button>
@@ -87,7 +87,7 @@ const OfferPopup = () => {
           </p>
 
           <p className="text-sm text-gray-300 mb-2">
-            *Only for Self Pickup (No Delivery)
+            *Only on Self take away (No Delivery)
           </p>
 
           {/* Code */}

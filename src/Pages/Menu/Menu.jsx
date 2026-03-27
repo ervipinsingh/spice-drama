@@ -47,6 +47,7 @@ const Menu = () => {
           "Snacks",
           "Desserts",
           "Beverages",
+          "Combos",
         ].map((cat) => (
           <button
             key={cat}

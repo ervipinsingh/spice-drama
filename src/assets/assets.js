@@ -22,6 +22,7 @@ import menu_14 from "./snacks.png";
 import menu_15 from "./Desserts.png";
 import menu_16 from "./Beverages.webp";
 import menu_17 from "./others.png";
+import menu_18 from "./combo.png";
 
 import add_icon_white from "./add_icon_white.png";
 import add_icon_green from "./add_icon_green.png";
@@ -122,6 +123,10 @@ export const menu_list = [
   {
     menu_name: "Beverages",
     menu_image: menu_16,
+  },
+   {
+    menu_name: "Combos",
+    menu_image: menu_18,
   },
   {
     menu_name: "Others",
